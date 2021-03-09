@@ -3,7 +3,7 @@
 
 
 int main(int argc, char **argv) {
-	ros::init(argc, argv, "radius");
+	ros::init(argc, argv, "node");
 
     int length = 0;
     // radius is not given
