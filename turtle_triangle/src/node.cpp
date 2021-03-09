@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
 
     geometry_msgs::Twist output;
 	
-	ros::Rate loop_rate(1);  // 10Hz
+	ros::Rate loop_rate(1);
 
     int count = 0;
 	
