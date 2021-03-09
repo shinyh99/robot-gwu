@@ -1,0 +1,14 @@
+Published topics:
+	/turtle1/color_sensor [turtlesim/Color]
+	/turtle1/pose [turlesim/Pose]
+	
+Subscribed topcis:
+	/turtle1/cmd_vel [geometry_msgs/Twist]
+	
+	
+Services:
+	/turtle1/set_pen
+	/turtle1/teleport_absolute
+	/turtle1/teleport_relative
+	/turtlesim/get_loggers
+	/turtlesim/set_logger_level
