@@ -1,0 +1,6 @@
+## request
+int64 val1
+int64 val2
+---
+## response
+int64 result
