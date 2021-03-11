@@ -130,4 +130,4 @@ dmypy.json
 
 # vscode
 .vscode
-.zip
+*.zip
