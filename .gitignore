@@ -130,4 +130,7 @@ dmypy.json
 
 # vscode
 .vscode
+
+# user defined
 *.zip
+CMakeLists.txt
