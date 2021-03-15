@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+    <node pkg="my_car" type="key.py" name="key"/>
+    <node pkg="carsim_gazebo" type="teleop.py" name="teleop_twist_keyboard">
+        <remap from="carsim/cmd_vel" to="cmd_vel"/>
+    </node>
+</launch>
