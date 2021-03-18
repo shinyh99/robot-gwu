@@ -51,6 +51,8 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   Distance.msg
+  Array1d.msg
+  Array2d.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -163,6 +165,7 @@ catkin_install_python(PROGRAMS
   scripts/key.py
   scripts/index_to_range.py
   scripts/front_distance.py
+  scripts/cluster.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

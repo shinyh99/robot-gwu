@@ -21,14 +21,14 @@ def distance_call_back(distance):
 
 def speed_control(front_distance, direction):
     # Far enough
+    rospy.loginfo("%f" % front_distance)
     if front_distance > 4:
         pass
     # Need attention
     else:
         # is moving forward
         if direction.linear.x > 0:
-            # print("Too close!!!")
-            rospy.logwarn("Too Close!!!")
+            rospy.logwarn("%f Too Close!!!" % front_distance)
             direction.linear.x = 0  # may require damping
 
         # not moving
@@ -40,15 +40,16 @@ def key_pub():
     rospy.init_node("key", anonymous=True)
     _ = rospy.Subscriber("cmd_vel", Twist, key_call_back)
     _ = rospy.Subscriber("front_distance", Distance, distance_call_back)
-    pub = rospy.Publisher("carsim/cmd_vel", Twist, queue_size=1)
-    # rate = rospy.Rate(10)  # 10hz
+    pub = rospy.Publisher("carsim/cmd_vel", Twist, queue_size=10)
+    rate = rospy.Rate(10)  # 10hz
 
     global DIRECTION, DISTANCE
+    # rospy.spin()
 
     while not rospy.is_shutdown():
         speed_control(DISTANCE.front, DIRECTION)
         pub.publish(DIRECTION)
-        # rate.sleep()
+        rate.sleep()
 
 
 if __name__ == "__main__":
