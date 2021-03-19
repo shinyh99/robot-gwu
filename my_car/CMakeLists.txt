@@ -51,8 +51,9 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   Distance.msg
-  Array1d.msg
-  Array2d.msg
+  List_int.msg
+  Array_int.msg
+  List_position.msg
 )
 
 ## Generate services in the 'srv' folder
