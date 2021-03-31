@@ -6,6 +6,8 @@ from std_msgs.msg import Header, Float64MultiArray, ColorRGBA
 from sensor_msgs.msg import PointCloud
 from geometry_msgs.msg import Point32
 from visualization_msgs.msg import Marker, MarkerArray
+from copy import deepcopy
+import numpy as np
 
 # from typing import NamedTuple
 
@@ -25,16 +27,14 @@ from visualization_msgs.msg import Marker, MarkerArray
 # float32[] intensities
 
 
-class PointList:
-    x = []
-    y = []
+# class PointList:
+#     def __init__(self, values=None):
+#         self.points: list
+#         self.points = []
+#         pass
 
-    def __init__(self, values=None):
-        self.x = []  # list of float
-        self.y = []  # list of float
-
-    def __len__(self):
-        return len(self.x)
+#     def __len__(self):
+#         return len(self.points)
 
 
 class RPLidar_3:
@@ -187,8 +187,6 @@ class RPLidar_3:
         # default: 6cm
         self.d_split = 0.06  # m
 
-        self.mk_array = MarkerArray()
-
         color_raw = ColorRGBA()
         color_raw.r = 1
         color_raw.g = 0
@@ -224,8 +222,8 @@ class RPLidar_3:
             mk.type = Marker.SPHERE
             mk.action = Marker.ADD
 
-            mk.pose.position.x = _p[0]
-            mk.pose.position.y = _p[1]
+            mk.pose.position.x = _p.x
+            mk.pose.position.y = _p.y
 
             # subject to change
             mk.pose.position.z = height
@@ -252,75 +250,110 @@ class RPLidar_3:
 
             return mk
 
-        def draw_marker(points: PointList, h, color, head=0) -> None:
+        def drawing(pts_list: list, height: float, color: ColorRGBA):
+            pts: list
+
+            for pts in pts_list:
+                draw_pcl(pts, height)
+
+                pts_size = len(pts)
+                pts_head = list()
+                pts_head = [pts[pts_size // 2]]
+                draw_marker(pts_head, height, color, pts_size / 200.0)
+
+        def draw_pcl(pts: list, height: float):
+            pt: Point32
+            for pt in pts:
+                # * IMPORTANT to DEEPCOPY
+                new_pt = deepcopy(pt)
+                new_pt.z = height
+                self.pcl.points.append(new_pt)
+
+        def draw_marker(points: list, h, color, head=0):
 
             # Filtered Laser Scan Data
-            for x, y in zip(points.x, points.y):
-                self.mk_array.markers.append(set_marker((x, y), h, color, head))
+            for pt in points:
+                self.mk.markers.append(set_marker((pt), h, color, head))
 
-        def filter_inf(input: LaserScan) -> PointList:
-            x_points = []
-            y_points = []
+        def filter_raw(input: LaserScan) -> list:
+            pts = list()
 
+            # Use real laser data
             # filter invalid range
             angle = input.angle_min
             for r in input.ranges:
                 if not (math.isinf(r) or math.isnan(r)):
+                    pt = Point32()
+                    pt.x = r * math.cos(angle)
+                    pt.y = r * math.sin(angle)
 
-                    x_points.append(r * math.cos(angle))
-                    y_points.append(r * math.sin(angle))
+                    pts.append(pt)
 
                 angle += input.angle_increment
-            points = PointList()
-            points.x = x_points
-            points.y = y_points
-            points.num_of_points = len(x_points)
-            return points
 
-        def grouping(points: PointList, min_size: int = 3) -> list:
+            # # Use fabricated values
+            # pts_x = np.hstack(
+            #     (np.arange(0, 1, 0.01), np.arange(-1, 1, 0.01), np.arange(-1, 0, 0.01))
+            # )
+            # pts_y = np.hstack((np.ones(100), -1 * np.ones(200), np.ones(100)))
+
+            # for x, y in zip(pts_x, pts_y):
+            #     pt = Point32()
+            #     pt.x = x
+            #     pt.y = y
+            #     pts.append(pt)
+
+            return pts
+
+        def grouping(points: list, min_size: int = 3) -> list:
             clusters = list()
-            pts = PointList()
-            pts.x, pts.y = [points.x[0]], [points.y[0]]
+            temp_pts = list()
+            flag = False
 
-            for i in range(1, points.num_of_points):
-                x_before, y_before = points.x[i - 1], points.y[i - 1]
+            for i, _ in enumerate(points):
+                pt_before = points[i - 1]
+                pt_now = points[i]
 
-                x_now, y_now = points.x[i], points.y[i]
                 # get euclidean distance
-                d_i = math.sqrt((x_now - x_before) ** 2 + (y_now - y_before) ** 2)
-                r_i = math.sqrt(x_now ** 2 + y_now ** 2)
+                d_i = math.sqrt(
+                    (pt_now.x - pt_before.x) ** 2 + (pt_now.y - pt_before.y) ** 2
+                )
+                r_i = math.sqrt(pt_now.x ** 2 + pt_now.y ** 2)
 
                 # Same cluster
                 if d_i < self.d_g + r_i * self.d_p:
-                    pts.x.append(x_now)
-                    pts.y.append(y_now)
+                    temp_pts.append(pt_now)
 
                 # New Cluster
                 else:
+                    if flag is False:
+                        points.extend(temp_pts)
+                        temp_pts = list()
+                        flag = True
                     # only if the cluster has more points than min_size
-                    if len(pts) >= min_size:
-                        clusters.append(pts)
-                    pts = PointList()
-                    pts.x, pts.y = [x_now], [y_now]
+                    if len(temp_pts) >= min_size:
+                        clusters.append(temp_pts)
+                    temp_pts = list()
+                    temp_pts.append(pt_now)
             else:
-                if len(pts) >= min_size:
-                    clusters.append(pts)
+                if len(temp_pts) >= min_size:
+                    clusters.append(temp_pts)
 
             return clusters
 
         def splitting(clusters: list, level: int = 0, min_size: int = 3) -> list:
             clusters_out = list()
 
-            cluster: PointList
-            for cluster in clusters:
+            pts: list  # list of point32
+            for pts in clusters:
 
                 # if cluster has less than three point, it can't be divided
-                if len(cluster) < 3:
-                    clusters_out.append(cluster)
+                if len(pts) < 3:
+                    clusters_out.append(pts)
 
                 else:
-                    x0, x1 = cluster.x[0], cluster.x[-1]
-                    y0, y1 = cluster.y[0], cluster.y[-1]
+                    x0, x1 = pts[0].x, pts[-1].x
+                    y0, y1 = pts[0].y, pts[-1].y
 
                     # a*x + b*y + c = 0
                     # a = (y0 - y1), b = (x1 - x0), c = (x0*y1 - x1*y0)
@@ -331,99 +364,83 @@ class RPLidar_3:
                     # farthest point in cluster
                     max_d_j = 0.0
                     index = 0
-                    for i, (x, y) in enumerate(zip(cluster.x, cluster.y)):
-                        d_j = abs(a * x + b * y + c) / math.sqrt(a ** 2 + b ** 2)
+
+                    for i, pt in enumerate(pts):
+                        d_j = abs(a * pt.x + b * pt.y + c) / math.sqrt(a ** 2 + b ** 2)
                         if d_j > max_d_j:
                             index = i
                             max_d_j = d_j
 
                     d_j = max_d_j
-                    r_j = math.sqrt(cluster.x[index] ** 2 + cluster.y[index] ** 2)
+                    r_j = math.sqrt(pts[index].x ** 2 + pts[index].y ** 2)
 
                     # split.
 
                     if d_j > self.d_split + self.d_p * r_j:
-                        cluster_left, cluster_right = PointList(), PointList()
-                        cluster_left.x, cluster_left.y = (
-                            cluster.x[0 : index + 1],
-                            cluster.y[0 : index + 1],
-                        )
-                        cluster_right.x, cluster_right.y = (
-                            cluster.x[index:],
-                            cluster.y[index:],
-                        )
-                        split_left = splitting([cluster_left], level + 1)
-                        split_right = splitting([cluster_right], level + 1)
+                        left_pts, right_pts = list(), list()
+                        left_pts = pts[0 : index + 1]
+                        right_pts = pts[index:]
+
+                        split_left = splitting([left_pts], level + 1)
+                        split_right = splitting([right_pts], level + 1)
                         clusters_out.extend(split_left)
                         clusters_out.extend(split_right)
 
                     # do not split
                     else:
-                        clusters_out.append(cluster)
+                        clusters_out.append(pts)
 
             return clusters_out
 
         def callback(input: LaserScan):
-            self.mk_array = MarkerArray()
             self.__id = 0
 
             # filter out infinity and get x, y points
-            points = PointList()
-            points = filter_inf(input)
+            points: list
+            points = filter_raw(input)
 
             ## Grouping
-            clusters = grouping(points)
+            groups = grouping(points)
 
             ## Splitting
-            splits = splitting(clusters, level=0)
+            splits = splitting(groups, level=0)
 
             ## Drawing
+            self.pcl = PointCloud()
+            self.pcl.header = Header()
+            self.pcl.header.stamp = rospy.Time.now()
+            self.pcl.header.frame_id = "laser"
+            self.mk = MarkerArray()
+
             # draw raw(without inf)
             draw_marker(points, 0.5, color_raw)
 
-            # Draw clusters
-            cluster: PointList
-            for cluster in clusters:
-                # change the height
-                draw_marker(points, 1.0, color_cluster)
-                cluster_size = len(cluster)
+            drawing(groups, 1.0, color_cluster_head)
+            drawing(splits, 1.5, color_split_head)
 
-                cluster_head = PointList()
-                cluster_head.x = [cluster.x[cluster_size // 2]]
-                cluster_head.y = [cluster.y[cluster_size // 2]]
-                draw_marker(
-                    cluster_head,
-                    1.0,
-                    color_cluster_head,
-                    cluster_size / 200.0,
-                )
+            count_group = 0
+            count_split = 0
+            for pt in self.pcl.points:
+                if pt.z == 1.0:
+                    count_group += 1
 
-            # Draw splits
-            # split: PointList
-            for split in splits:
-                # darw splitted cluster
-                draw_marker(split, 1.5, color_split)
+                else:
+                    count_split += 1
 
-                split_size = len(split)
+        self.pcl = PointCloud()
+        self.mk = MarkerArray()
 
-                split_head = PointList()
-                split_head.x = [split.x[split_size // 2]]
-                split_head.y = [split.y[split_size // 2]]
-                draw_marker(
-                    split_head,
-                    1.5,
-                    color_split_head,
-                    split_size / 200.0,
-                )
-
-        _ = rospy.Subscriber("/scan_rate", LaserScan, callback=callback)
-        marker_pub = rospy.Publisher("/marker", MarkerArray, queue_size=3)
+        _ = rospy.Subscriber("/scan", LaserScan, callback=callback)
+        pcl_pub = rospy.Publisher("/pcl", PointCloud, queue_size=10)
+        mk_pub = rospy.Publisher("/mk", MarkerArray, queue_size=3)
 
         rate = rospy.Rate(50)
 
         while not rospy.is_shutdown():
 
-            marker_pub.publish(self.mk_array)
+            pcl_pub.publish(self.pcl)
+            mk_pub.publish(self.mk)
+
             rate.sleep()
 
 
