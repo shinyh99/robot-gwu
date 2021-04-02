@@ -132,5 +132,5 @@ dmypy.json
 .vscode
 
 # user defined
-CMakeLists.txt
+/CMakeLists.txt
 /test
