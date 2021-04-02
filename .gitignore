@@ -132,6 +132,5 @@ dmypy.json
 .vscode
 
 # user defined
-*.zip
 CMakeLists.txt
 /test
