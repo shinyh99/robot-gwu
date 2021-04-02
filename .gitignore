@@ -133,5 +133,5 @@ dmypy.json
 
 # user defined
 *.zip
-./CMakeLists.txt
+CMakeLists.txt
 /test
