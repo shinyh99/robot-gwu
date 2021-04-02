@@ -1,0 +1,4 @@
+https://morai.atlassian.net/wiki/spaces/MUMSP/pages/76972033/User%2BManual%2BKorean
+
+id: scout_edu
+pw: scout1234
