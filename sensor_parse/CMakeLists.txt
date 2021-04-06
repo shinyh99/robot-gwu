@@ -162,6 +162,10 @@ include_directories(
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
   scripts/image_parser.py
+  scripts/object_detector.py
+  scripts/scan_parser.py
+  scripts/gps_imu_parser.py
+  scripts/caliberation.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
