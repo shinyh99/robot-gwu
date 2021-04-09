@@ -21,7 +21,7 @@ class MakePath:
         self.prev_x = 0
         self.prev_y = 0
         rospack = rospkg.RosPack()
-        pkg_path = rospack.get_path("av_alg_mgko")
+        pkg_path = rospack.get_path("espm")
         full_path = pkg_path + "/path" + "/test.txt"
 
         with open(full_path, "w") as self.f:

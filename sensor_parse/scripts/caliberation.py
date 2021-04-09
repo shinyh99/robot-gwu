@@ -229,6 +229,8 @@ if __name__ == "__main__":
 
     ex_calib_transform = SensorCalib()
 
+    print(ex_calib_transform.xyz)
+
     time.sleep(1)
 
     rate = rospy.Rate(10)
