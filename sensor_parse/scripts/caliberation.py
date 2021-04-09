@@ -19,8 +19,8 @@ params_lidar = {
 
 
 params_cam = {
-    "WIDTH": 320,  # image width
-    "HEIGHT": 240,  # image height
+    "WIDTH": 640,  # image width
+    "HEIGHT": 480,  # image height
     "FOV": 60,  # Field of view
     "X": 0.0,  # meter
     "Y": 0,
