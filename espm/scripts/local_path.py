@@ -29,7 +29,7 @@ class PathPubTf:
         self.local_path_size = 50
 
         rospack = rospkg.RosPack()
-        pkg_path = rospack.get_path("av_alg_mgko")
+        pkg_path = rospack.get_path("espm")
         full_path = pkg_path + "/path" + "/test.txt"
 
         with open(full_path, "r") as self.f:
@@ -39,7 +39,7 @@ class PathPubTf:
                 read_pose = PoseStamped()
                 read_pose.pose.position.x = float(tmp[0])
                 read_pose.pose.position.y = float(tmp[1])
-                read_pose.pose.position.w = 1
+                read_pose.pose.orientation.w = 1
                 self.global_path_msg.poses.append(read_pose)
 
         rate = rospy.Rate(20)
@@ -50,7 +50,7 @@ class PathPubTf:
 
                 x = self.x
                 y = self.y
-                min_dis = float("int")
+                min_dis = float("inf")
                 current_waypoint = -1
                 for i, waypoint in enumerate(self.global_path_msg.poses):
                     distance = sqrt(
