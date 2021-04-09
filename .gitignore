@@ -134,4 +134,3 @@ dmypy.json
 # user defined
 /CMakeLists.txt
 /test
-archive

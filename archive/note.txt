@@ -1,0 +1,22 @@
+https://www.miguelalonsojr.com/blog/robotics/ros/python3/2019/08/20/ros-melodic-python-3-build.html
+
+mkdir catkin_ws
+cd catkin_ws
+mkdir src
+cd src 
+git clone https://github.com/ros/geometry
+git clone https://github.com/ros/geometry2
+cd ..
+virtualenv -p /usr/bin/python3 venv
+source venv/bin/activate
+pip install catkin_pkg pyyaml empy rospkg numpy
+catkin_make
+source devel/setup.bash
+
+# Reboot!!!!
+
+https://morai.atlassian.net/wiki/spaces/MUMSP/pages/76972033/User+Manual+Korean
+scout_edu
+scout1234
+
+catkin_make _DPYTHON_EXCUTABLE=/user/bin/python3
