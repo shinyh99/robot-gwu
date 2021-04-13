@@ -28,6 +28,8 @@ class globalPathPlanning:
         self.global_path_pub = rospy.Publisher(
             "global_path", Path, queue_size=1
         )
+
+        # global link and node
         self.link_pub = rospy.Publisher("link", PointCloud, queue_size=1)
         self.node_pub = rospy.Publisher("node", PointCloud, queue_size=1)
 
@@ -63,7 +65,7 @@ class globalPathPlanning:
 
             rate.sleep()
 
-    def current_pose_callback(self, msg):
+    def current_pose_callback(self, msg: Odometry):
         self.pose_msg = msg
         self.is_pose = True
 

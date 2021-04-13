@@ -7,7 +7,6 @@ import rospkg
 from math import cos, sin, pi, sqrt, pow
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry, Path
-from rospy.topics import Publisher
 
 """실습2: 경로 읽어오기 및 지역경로 생성
 - 저장한 텍스트 파일을 읽어서 경로 메시지에 담아서 전역경로를 Publish 핚다.
