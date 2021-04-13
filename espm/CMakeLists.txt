@@ -163,7 +163,10 @@ include_directories(
 catkin_install_python(PROGRAMS
   scripts/get_mgeo.py
   scripts/global_path.py
+  scripts/global_path_planning.py
   scripts/local_path.py
+  scripts/dijkstra.py
+  scripts/gps_imu_parser.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

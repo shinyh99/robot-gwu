@@ -7,6 +7,14 @@ from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry, Path
 import tf
 
+"""실습1: 전역 경로 생성
+- 센서 데이터(GPS, IMU)를 이용해 로봇의 Global Pose를 알 수 있다.
+- 로봇의 위치를 기록핚 점들의 집합은 경로가 된다.
+- 경로를 생성해 텍스트파읷로 저장하자.
+    - 텍스트 파읷에는 x, y, yaw(rad)을 저장하고, 데이터갂 갂격은 탭(\t)으로 구분하고, 매 순갂 기록핚 경로점 사이 데이터는 줄 바꿈(\n)으로 구분핚다.
+- ROS 메시지는 nav_msgs/Path 타입을 사용핚다.
+"""
+
 
 class MakePath:
     def __init__(self) -> None:

@@ -21,15 +21,14 @@ class Converter:
         self.gps_sub = rospy.Subscriber(
             "/gps", GPSMessage, self.navsat_callback
         )
+        self.proj_UTM = Proj(
+            proj="utm", zone=52, ellps="WGS84", preserve_units=False
+        )
         self.imu_sub = rospy.Subscriber("/imu", Imu, self.imu_callback)
 
         self.odom_pub = rospy.Publisher("/odom", Odometry, queue_size=3)
 
         self.x, self.y, self.heading = None, None, None
-
-        self.proj_UTM = Proj(
-            proj="utm", zone=52, ellps="WGS84", preserve_units=False
-        )
 
         self.odom_msg = Odometry()
         self.odom_msg.header.frame_id = "/odom"

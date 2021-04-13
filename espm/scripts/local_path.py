@@ -9,6 +9,13 @@ from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry, Path
 from rospy.topics import Publisher
 
+"""실습2: 경로 읽어오기 및 지역경로 생성
+- 저장한 텍스트 파일을 읽어서 경로 메시지에 담아서 전역경로를 Publish 핚다.
+- 전역경로의 경로점 중 로봇과 가장 가까운 경로점을 탐색핚다.
+- 가장 가까운 경로점을 시작으로하는 지역경로를 생성해서 메시지로 Publish 핚다.
+    - 원하는 지역경로의 길이만큼 경로점을 가져온다.
+"""
+
 
 class PathPubTf:
     def __init__(self) -> None:

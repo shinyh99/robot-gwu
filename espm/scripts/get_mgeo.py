@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import os
 import sys
@@ -25,6 +26,14 @@ mgeo_lib_path = os.path.normpath(
 from lib.mgeo.class_defs import *
 
 # import lib.mgeo.class_defs.mgeo_planner_map
+
+"""실습3: 모든 노드, 링크 시각화하기
+- Mgeo를 이용해서 노드, 링크를 RVIZ에서 시각화하기
+- 각 노드, 링크들을 Sensor_msgs/PintClout 타입에 담아 publish 하기
+
+Returns:
+    [type]: [description]
+"""
 
 
 class test:
@@ -68,6 +77,7 @@ class test:
                 tmp_point.x = link_point[0]
                 tmp_point.y = link_point[1]
                 tmp_point.z = 0
+
                 all_link.points.append(tmp_point)
 
         return all_link
