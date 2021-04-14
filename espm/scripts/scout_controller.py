@@ -39,7 +39,15 @@ class FollowTheCarrot:
         # Lateral control
         self.ctrl_msg = Twist()
         self.ctrl_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
-        self.status_pub = rospy.Publisher("/status_vel", Float32, queue_size=1)
+        self.vel_current_pub = rospy.Publisher(
+            "/vel_plot/current_vel", Float32, queue_size=1
+        )
+        self.vel_target_pub = rospy.Publisher(
+            "/vel_plot/target_vel", Float32, queue_size=1
+        )
+        self.vel_input_pub = rospy.Publisher(
+            "/vel_plot/input_vel", Float32, queue_size=1
+        )
 
         self.forward_point = Point()
         self.current_postion = Point()
@@ -150,7 +158,9 @@ class FollowTheCarrot:
                     self.ctrl_msg.linear.x = 0.0
 
                 self.ctrl_pub.publish(self.ctrl_msg)
-                self.status_pub.publish(self.speed_current)
+                self.vel_current_pub.publish(self.speed_current)
+                self.vel_target_pub.publish(self.pid.setpoint)
+                self.vel_input_pub.publish(self.speed_input)
 
             rate.sleep()
 
@@ -178,6 +188,8 @@ class FollowTheCarrot:
     def status_callback(self, msg: ScoutStatus):
         self.speed_current = msg.linear_velocity
         self.speed_current_on = True
+
+    
 
 
 if __name__ == "__main__":

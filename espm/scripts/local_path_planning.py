@@ -10,7 +10,7 @@ from nav_msgs.msg import Odometry, Path
 from std_msgs.msg import Float32, Float32MultiArray
 
 
-class localPathPlanning:
+class LocalPathPlanning:
     def __init__(self):
         rospy.init_node("localPathPlanning", anonymous=True)
         self.local_path_pub = rospy.Publisher("local_path", Path, queue_size=1)
@@ -70,15 +70,15 @@ class localPathPlanning:
 
             rate.sleep()
 
-    def current_pose_callback(self, msg):
+    def current_pose_callback(self, msg: Odometry):
         self.pose_msg = msg
         self.is_pose = True
 
-    def path_callback(self, msg):
+    def path_callback(self, msg: Path):
         self.path_msg = msg
         self.is_path = True
 
 
 if __name__ == "__main__":
 
-    test = localPathPlanning()
+    test = LocalPathPlanning()
