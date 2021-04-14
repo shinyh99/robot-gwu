@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- sim -->
+    <node pkg="espm" type="sim.sh" name="sim_bash"/>
+    <!-- bridge -->
+    <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch"/>
+    <!-- gps imu parser -->
+    <node pkg="espm" type="gps_imu_parser.py" name="gps_imu_parser"/>
+    <!-- Global mapping -->
+    <node pkg="espm" type="global_path_planning.py" name="global_path_planning"/>
+    <!-- Local mapping -->
+    <node pkg="espm" type="local_path_planning.py" name="local_path_planning"/>
+</launch>

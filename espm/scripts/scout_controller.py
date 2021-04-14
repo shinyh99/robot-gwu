@@ -3,22 +3,43 @@
 
 import rospy
 from math import cos, sin, pi, sqrt, pow, atan2
+from std_msgs.msg import Float32
+
 from geometry_msgs.msg import Point, Twist
+from scout_msgs.msg import ScoutStatus
 from nav_msgs.msg import Odometry, Path
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 import numpy as np
 
+from simple_pid import PID
 
-class followTheCarrot:
+
+class FollowTheCarrot:
     def __init__(self):
-        rospy.init_node("followTheCarrot", anonymous=True)
-        rospy.Subscriber("local_path", Path, self.path_callback)
-        rospy.Subscriber("odom", Odometry, self.odom_callback)
-        self.ctrl_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
+        rospy.init_node("FollowTheCarrot", anonymous=True)
 
+        # Local path
+        self.path_on = False
+        rospy.Subscriber("local_path", Path, self.path_callback)
+
+        # Odometry
+        self.odom_on = False
+        rospy.Subscriber("odom", Odometry, self.odom_callback)
+
+        # Scout status
+        self.speed_current_on = False
+        # self.time = 0.0
+        rospy.Subscriber("/scout_status", ScoutStatus, self.status_callback)
+
+        # Longitudinal velocity PID control
+        self.speed_target_on = False
+        self.pid = PID(Kp=0.2, Ki=1, Kd=0.0, output_limits=(-100, 100))
+        rospy.Subscriber("/target_velocity", Float32, self.velocity_callback)
+
+        # Lateral control
         self.ctrl_msg = Twist()
-        self.is_path = False
-        self.is_odom = False
+        self.ctrl_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
+        self.status_pub = rospy.Publisher("/status_vel", Float32, queue_size=1)
 
         self.forward_point = Point()
         self.current_postion = Point()
@@ -28,11 +49,22 @@ class followTheCarrot:
         self.min_lfd = 3.0
         self.max_lfd = 30.0
 
-        rate = rospy.Rate(20)  # 20hz
+        freq = 20
+        self.pid.sample_time = 1 / freq
+        rate = rospy.Rate(freq)  # 20hz
         while not rospy.is_shutdown():
 
-            if self.is_path == True and self.is_odom == True:
+            if self.path_on and self.odom_on and self.speed_current_on:
 
+                ## Longitudinal control
+                if self.speed_target_on:
+                    self.speed_input = self.pid(self.speed_current)
+                    # self.speed_input = 3.0
+                    print(self.speed_input)
+                else:
+                    self.speed_input = 3.0
+
+                ## Lateral control
                 vehicle_position = self.current_postion
                 rotated_point = Point()
                 self.is_look_forward_point = False
@@ -110,7 +142,7 @@ class followTheCarrot:
                     local_path_point = det_t.dot(global_path_point)
                     theta = atan2(local_path_point[1], local_path_point[0])
                     self.ctrl_msg.angular.z = -theta
-                    self.ctrl_msg.linear.x = 3.0
+                    self.ctrl_msg.linear.x = self.speed_input
 
                 else:
                     # 전방주시 포인트를 찾지 못했을 때
@@ -118,15 +150,16 @@ class followTheCarrot:
                     self.ctrl_msg.linear.x = 0.0
 
                 self.ctrl_pub.publish(self.ctrl_msg)
+                self.status_pub.publish(self.speed_current)
 
             rate.sleep()
 
-    def path_callback(self, msg):
-        self.is_path = True
+    def path_callback(self, msg: Path):
+        self.path_on = True
         self.path = msg  # nav_msgs/Path
 
-    def odom_callback(self, msg):
-        self.is_odom = True
+    def odom_callback(self, msg: Odometry):
+        self.odom_on = True
         odom_quaternion = (
             msg.pose.pose.orientation.x,
             msg.pose.pose.orientation.y,
@@ -138,7 +171,15 @@ class followTheCarrot:
         self.current_postion.y = msg.pose.pose.position.y
         self.current_velocity = msg.twist.twist.linear.x
 
+    def velocity_callback(self, msg: Float32):
+        self.pid.setpoint = msg.data
+        self.speed_target_on = True
+
+    def status_callback(self, msg: ScoutStatus):
+        self.speed_current = msg.linear_velocity
+        self.speed_current_on = True
+
 
 if __name__ == "__main__":
 
-    test = followTheCarrot()
+    test = FollowTheCarrot()

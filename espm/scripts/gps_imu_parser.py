@@ -15,7 +15,7 @@ from nav_msgs.msg import Odometry
 
 class Converter:
     def __init__(self):
-        rospy.init_node("pedesterial_detector", anonymous=True)
+        rospy.init_node("gps_imu_parser", anonymous=True)
 
     def run(self):
         self.gps_sub = rospy.Subscriber(
