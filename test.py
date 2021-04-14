@@ -118,19 +118,6 @@
 # #         p.update(t)  # update information display
 
 # %%
-from simple_pid import PID
-
-pid = PID()
-
-
-pid.sample_time = 0.01
-pid.tunings = (1.0, 1.0, 1.0)
-pid.setpoint = 10.0
-
-output = 0.0
-pid.output_limits = (0, 1000.0)
-
-while True:
-    output = pid(output)
-
-    print(output)
+for i in range(-5, 5):
+    print(i)
+# %%
