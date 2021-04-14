@@ -180,7 +180,7 @@ class LocationSensor:
         self.x_old, self.y_old = 0, 0
         self.is_imu = False
 
-    def convertLL2UTM(self, lat, lon):
+    def convertLL2UTM(self, lat: float, lon: float):
 
         p1 = lat / self.D0  # Phi = Latitude(rad)
         l1 = lon / self.D0  # Lambda = Longitude(rad)
@@ -213,7 +213,7 @@ class LocationSensor:
 
         return east, north
 
-    def navsat_callback(self, gps_msg):
+    def navsat_callback(self, gps_msg: GPSMessage):
 
         lat = gps_msg.latitude
         lon = gps_msg.longitude
@@ -265,7 +265,7 @@ class LocationSensor:
 
         self.prev_heading = heading
 
-    def imu_callback(self, msg):
+    def imu_callback(self, msg: Imu):
         self.imu_msg = msg
         self.is_imu = True
 

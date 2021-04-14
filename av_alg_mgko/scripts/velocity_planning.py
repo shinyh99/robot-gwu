@@ -11,13 +11,15 @@ from math import cos, sin, sqrt, pow, atan2, pi
 from morai_msgs.msg import ObjectInfo
 
 
-class cruiseControl:
-    def __init__(self, object_vel_gain, object_dis_gain):
+class CruiseControl:
+    def __init__(self, object_vel_gain: float, object_dis_gain: float):
         self.object = [False, 0]
         self.object_vel_gain = object_vel_gain
         self.object_dis_gain = object_dis_gain
 
-    def checkObject(self, ref_path, global_vaild_object, local_vaild_object):
+    def checkObject(
+        self, ref_path: Path, global_vaild_object, local_vaild_object
+    ):
         self.object = [False, 0]
 
         if len(global_vaild_object) > 0:
@@ -58,7 +60,6 @@ class cruiseControl:
 
     def acc(self, local_vaild_object, ego_vel, target_vel):
         out_vel = target_vel
-        # print(self.object)
         if self.object[0] == True:
             print("ACC ON")
             front_vehicle = [
@@ -92,7 +93,7 @@ class cruiseControl:
         return out_vel
 
 
-class vaildObject:
+class VaildObject:
     def __init__(self):
         pass
 
@@ -100,7 +101,7 @@ class vaildObject:
         self.all_object = ObjectInfo()
         self.all_object = obj_msg
 
-    def calc_vaild_obj(self, ego_pose):
+    def calc_vaild_obj(self, ego_pose: list) -> tuple:
         global_object_info = []
         loal_object_info = []
         if self.all_object.num_of_objects > 0:

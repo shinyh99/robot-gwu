@@ -21,7 +21,7 @@ from nav_msgs.msg import Odometry
 from std_msgs.msg import Float32MultiArray
 
 
-class globalPathPlanning:
+class GlobalPathPlanning:
     def __init__(self):
         rospy.init_node("test", anonymous=True)
         self.global_path_pub = rospy.Publisher(
@@ -65,11 +65,11 @@ class globalPathPlanning:
 
             rate.sleep()
 
-    def current_pose_callback(self, msg):
+    def current_pose_callback(self, msg: Odometry):
         self.pose_msg = msg
         self.is_pose = True
 
-    def goal_callback(self, msg):
+    def goal_callback(self, msg: PoseStamped):
         print(self.is_pose)
         if self.is_pose == True:
             x = self.pose_msg.pose.pose.position.x
@@ -94,7 +94,7 @@ class globalPathPlanning:
                     goal_min_dis = goal_dis
                     end_node_idx = node_idx
 
-            result, path = self.global_planner.find_shortest_path(
+            _, path = self.global_planner.find_shortest_path(
                 start_node_idx, end_node_idx
             )
             dijkstra_path = Path()
@@ -136,4 +136,4 @@ class globalPathPlanning:
 
 if __name__ == "__main__":
 
-    test = globalPathPlanning()
+    test = GlobalPathPlanning()

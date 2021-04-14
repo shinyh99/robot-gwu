@@ -10,11 +10,11 @@ from nav_msgs.msg import Odometry, Path
 from std_msgs.msg import Float32, Float32MultiArray
 from morai_msgs.msg import ObjectInfo
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
-from velocity_planning import vaildObject, cruiseControl
+from velocity_planning import VaildObject, CruiseControl
 from scout_msgs.msg import ScoutStatus
 
 
-class localPathPlanning:
+class LocalPathPlanning:
     def __init__(self):
         rospy.init_node("localPathPlanning", anonymous=True)
         self.local_path_pub = rospy.Publisher("local_path", Path, queue_size=1)
@@ -35,8 +35,8 @@ class localPathPlanning:
         self.is_status = False
         self.target_vel_msg = Float32()
 
-        vaild_obj = vaildObject()
-        cruise_control = cruiseControl(0.5, 1)
+        vaild_obj = VaildObject()
+        cruise_control = CruiseControl(0.5, 1.0)
 
         rate = rospy.Rate(30)  # 20hz
         while not rospy.is_shutdown():
@@ -102,7 +102,7 @@ class localPathPlanning:
 
             rate.sleep()
 
-    def current_pose_callback(self, msg):
+    def current_pose_callback(self, msg: Odometry):
         self.pose_msg = msg
         self.is_pose = True
         odom_quaternion = (
@@ -117,15 +117,15 @@ class localPathPlanning:
         self.path_msg = msg
         self.is_path = True
 
-    def objectInfoCB(self, data):
+    def objectInfoCB(self, data: ObjectInfo):
         self.is_obj = True
         self.object_info_msg = data
 
-    def scout_status_callback(self, data):
+    def scout_status_callback(self, data: ScoutStatus):
         self.current_velocity = data.linear_velocity
         self.is_status = True
 
 
 if __name__ == "__main__":
 
-    test = localPathPlanning()
+    test = LocalPathPlanning()
