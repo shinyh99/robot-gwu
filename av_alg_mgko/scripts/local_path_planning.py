@@ -40,7 +40,9 @@ class LocalPathPlanning:
 
         rate = rospy.Rate(30)  # 20hz
         while not rospy.is_shutdown():
-            print(self.is_path, self.is_pose, self.is_obj, self.is_status)
+            print(
+                f"global_path:{self.is_path}, odom:{self.is_pose}, object:{self.is_obj}, scout:{self.is_status}"
+            )
 
             if self.is_path and self.is_pose and self.is_obj and self.is_status:
 

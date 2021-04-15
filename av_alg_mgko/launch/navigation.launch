@@ -1,6 +1,6 @@
 <launch>
 	<!-- bridge -->
-    <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch"/>
+    <!-- <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch"/> -->
 	<node pkg="av_alg_mgko" type="tf_.py" name="gps_parser"  />
 	<node pkg="av_alg_mgko" type="global_path_planning.py" name="global_path_planning"  />
 	<node pkg="av_alg_mgko" type="local_path_planning.py" name="local_path_planning"  />

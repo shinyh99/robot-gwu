@@ -118,6 +118,18 @@
 # #         p.update(t)  # update information display
 
 # %%
-for i in range(-5, 5):
-    print(i)
+# numbers_type = list[int]
+from typing import List
+
+
+def typing(numbers: List[int]):
+    floats = []
+    for i in numbers:
+        floats.append(i / 1.1)
+    return floats
+
+
+print(typing([10, 1, 2, 3, 4, 5]))
+
+
 # %%

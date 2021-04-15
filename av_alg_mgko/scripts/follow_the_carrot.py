@@ -7,6 +7,7 @@ from geometry_msgs.msg import Point, Twist
 from nav_msgs.msg import Odometry, Path
 from std_msgs.msg import Float32
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
+from ca_msgs.msg import CollisionAvoidance
 import numpy as np
 
 
@@ -16,12 +17,16 @@ class FollowTheCarrot:
         rospy.Subscriber("/local_path", Path, self.path_callback)
         rospy.Subscriber("/odom", Odometry, self.odom_callback)
         rospy.Subscriber("/target_vel", Float32, self.target_vel_callback)
+        rospy.Subscriber(
+            "/ctrl_collision", CollisionAvoidance, self.collision_callback
+        )
         self.ctrl_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
 
         self.ctrl_msg = Twist()
         self.is_path = False
         self.is_odom = False
         self.is_target_vel = False
+        self.is_ca = False
 
         self.forward_point = Point()
         self.current_postion = Point()
@@ -31,9 +36,14 @@ class FollowTheCarrot:
         self.min_lfd = 3.0
         self.max_lfd = 30.0
 
+        self.collision_data = CollisionAvoidance()
+
         rate = rospy.Rate(20)  # 20hz
         while not rospy.is_shutdown():
-            print(self.is_path, self.is_odom, self.is_target_vel)
+            print(
+                f"local:{self.is_path}, odom:{self.is_odom}, target:{self.is_target_vel}",
+                flush=True,
+            )
 
             if self.is_path and self.is_odom and self.is_target_vel:
 
@@ -112,8 +122,27 @@ class FollowTheCarrot:
                         1,
                     ]
                     local_path_point = det_t.dot(global_path_point)
-                    theta = atan2(local_path_point[1], local_path_point[0])
-                    self.ctrl_msg.angular.z = -theta
+                    theta = -atan2(local_path_point[1], local_path_point[0])
+
+                    phi_final = 0
+                    if self.is_ca:
+                        alpha = self.collision_data.ca_const_alpha
+                        beta = self.collision_data.ca_const_beta
+                        d_min = self.collision_data.ca_distance
+                        try:
+                            frac_alpha_dmin = alpha / d_min
+                        except ZeroDivisionError:
+                            frac_alpha_dmin = 100.0
+                        phi_final = (
+                            frac_alpha_dmin * self.collision_data.phi_gap
+                            + beta * theta
+                        ) / (frac_alpha_dmin + beta)
+
+                    else:
+                        phi_final = theta
+
+                    self.ctrl_msg.angular.z = phi_final
+                    print(phi_final * 108 / pi)
                     self.ctrl_msg.linear.x = self.target_vel
 
                 else:
@@ -132,7 +161,7 @@ class FollowTheCarrot:
         self.is_path = True
         self.path = msg  # nav_msgs/Path
 
-    def odom_callback(self, msg):
+    def odom_callback(self, msg: Odometry):
         self.is_odom = True
         odom_quaternion = (
             msg.pose.pose.orientation.x,
@@ -145,9 +174,14 @@ class FollowTheCarrot:
         self.current_postion.y = msg.pose.pose.position.y
         self.current_velocity = msg.twist.twist.linear.x
 
-    def target_vel_callback(self, msg):
-        self.target_vel = msg.data
+    def target_vel_callback(self, msg: Float32):
         self.is_target_vel = True
+        # self.target_vel = msg.data
+        self.target_vel = 3.0
+
+    def collision_callback(self, msg: CollisionAvoidance):
+        self.is_ca = True
+        self.collision_data = msg
 
 
 if __name__ == "__main__":
