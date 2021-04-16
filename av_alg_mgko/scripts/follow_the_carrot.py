@@ -40,6 +40,8 @@ class FollowTheCarrot:
 
         rate = rospy.Rate(20)  # 20hz
         while not rospy.is_shutdown():
+            rate.sleep()
+
             print(
                 f"local:{self.is_path}, odom:{self.is_odom}, target:{self.is_target_vel}",
                 flush=True,
@@ -122,27 +124,32 @@ class FollowTheCarrot:
                         1,
                     ]
                     local_path_point = det_t.dot(global_path_point)
-                    theta = -atan2(local_path_point[1], local_path_point[0])
+                    theta = atan2(local_path_point[1], local_path_point[0])
 
                     phi_final = 0
                     if self.is_ca:
                         alpha = self.collision_data.ca_const_alpha
                         beta = self.collision_data.ca_const_beta
                         d_min = self.collision_data.ca_distance
+
                         try:
                             frac_alpha_dmin = alpha / d_min
                         except ZeroDivisionError:
-                            frac_alpha_dmin = 100.0
-                        phi_final = (
-                            frac_alpha_dmin * self.collision_data.phi_gap
-                            + beta * theta
-                        ) / (frac_alpha_dmin + beta)
+                            phi_final = theta
+                        else:
+                            phi_final = (
+                                frac_alpha_dmin * self.collision_data.phi_gap
+                                + beta * theta
+                            ) / (frac_alpha_dmin + beta)
 
                     else:
                         phi_final = theta
 
                     self.ctrl_msg.angular.z = phi_final
-                    print(phi_final * 108 / pi)
+                    print(
+                        int(self.collision_data.phi_gap * 180 / pi),
+                        int(phi_final * 180 / pi),
+                    )
                     self.ctrl_msg.linear.x = self.target_vel
 
                 else:
@@ -154,8 +161,6 @@ class FollowTheCarrot:
                     self.ctrl_msg.angular.z = 0.0
                     self.ctrl_msg.linear.x = 0.0
                 self.ctrl_pub.publish(self.ctrl_msg)
-
-            rate.sleep()
 
     def path_callback(self, msg: Path):
         self.is_path = True

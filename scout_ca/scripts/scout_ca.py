@@ -18,10 +18,18 @@ import numpy as np
 
 MaxLeftDegree = 55.0
 MaxRightDegree = -55.0
-MarginDist = 1
+MarginDist = 0.1
 
 GainAlpha = 1.3
 GainBeta = 1
+
+
+def rad2deg(rad):
+    return rad * 180.0 / math.pi
+
+
+def deg2rad(degree):
+    return degree * math.pi / 180.0
 
 
 class ObjInfo(object):
@@ -55,72 +63,146 @@ class ScoutCollisionAvoidance:
         self.egoHeadAngle = 0
         self.egoHeadQuaternion = []
 
-        self.guidAngleLeft = MaxLeftDegree / 180.0 * math.pi
-        self.guidAngleRight = MaxRightDegree / 180.0 * math.pi
+        self.guidAngleLeft = deg2rad(MaxLeftDegree)
+        self.guidAngleRight = deg2rad(MaxRightDegree)
 
     def process(self):
         tmpResultMsg = CollisionAvoidance()
         tmpResultMsg.header.stamp = rospy.Time.now()
+
+        # if object exists
         if self.len_obj > 0:
             focusObjs = self.filtering()
             lengthObjs = len(focusObjs)
+            # if object in interest zone does not exist
             if lengthObjs < 1:
+                # return nothing
                 return tmpResultMsg
+
+            # filter closest to farthest
             findNearObjs = sorted(
                 focusObjs, key=lambda x: x.distFromEgo, reverse=False
             )
+            # TODO this section is fucked up so hard
             maxIdx, gapList = self.calcGap(focusObjs, lengthObjs)
+
+            # for gap in gapList:
+            #     print(gap * 180 / math.pi, end="  ")
+
+            # print(gapList[maxIdx] * 180 / math.pi, sumAngle * 180 / math.pi)
+            # # if the largst gap is at left boundary
+            # if maxIdx == 0:
+            #     maxIdx = 1
+            # # ???
+            # elif maxIdx == (len(gapList)):
+            #     return tmpResultMsg
+            # # if the largest gap is at left, tmpIdx is 0
+            # # if the largest gap is not at left, tmpIdx is i-1
+            # tmpIdx = maxIdx - 1
+            # # get distance
+
+            # if the largest gap is at leftmost
+            l_bound = 0.0
+            r_bound = 0.0
             if maxIdx == 0:
-                maxIdx = 1
-            elif maxIdx == (len(gapList)):
-                return tmpResultMsg
-            tmpIdx = maxIdx - 1
-            tmpDist1 = np.sqrt(
-                focusObjs[tmpIdx].maxCircleRadius ** 2
-                + focusObjs[tmpIdx].distFromEgo ** 2
-            )
-            tmpDist2 = np.sqrt(
-                focusObjs[tmpIdx - 1].maxCircleRadius ** 2
-                + focusObjs[tmpIdx - 1].distFromEgo ** 2
-            )
-            sumAngle = (
-                focusObjs[tmpIdx].marginAngleLeft
-                + focusObjs[tmpIdx - 1].marginAngleRight
-            )
-            tmpNum = tmpDist1 + tmpDist2 * np.cos(sumAngle)
-            tmpDen = np.sqrt(
-                tmpDist1 ** 2
-                + tmpDist2 ** 2
-                + (2.0 * tmpDist1 * tmpDist2 * np.cos(sumAngle))
-            )
-            angleGapC = np.arccos(tmpNum / tmpDen) - (
-                focusObjs[tmpIdx].marginAngleLeft
-            )
+                l_bound = self.guidAngleLeft
+                r_bound = focusObjs[maxIdx].marginAngleLeft
+                phi_gap_c = self.guidAngleLeft - gapList[maxIdx] / 2
+            # if the largest gap is at rightmost
+            elif maxIdx == len(gapList) - 1:
+                l_bound = focusObjs[maxIdx - 1].marginAngleRight
+                r_bound = self.guidAngleRight
+                phi_gap_c = self.guidAngleRight + gapList[maxIdx] / 2
+            # if the largest gap is between the objects
+            else:
+                # Do trigometry
+                r_obj_idx = maxIdx
+                l_obj_idx = int(maxIdx - 1)
+                l_bound = focusObjs[l_obj_idx].marginAngleRight
+                r_bound = focusObjs[r_obj_idx].marginAngleLeft
+                phi_1, phi_2 = abs(r_bound), abs(l_bound)
+                d_1 = np.sqrt(
+                    focusObjs[r_obj_idx].maxCircleRadius ** 2
+                    + focusObjs[r_obj_idx].distFromEgo ** 2
+                )
+                d_2 = np.sqrt(
+                    focusObjs[l_obj_idx].maxCircleRadius ** 2
+                    + focusObjs[l_obj_idx].distFromEgo ** 2
+                )
+                numerator = d_1 + d_2 * np.cos(phi_1 + phi_2)
+                denominator = np.sqrt(
+                    d_1 ** 2
+                    + d_2 ** 2
+                    + (2.0 * d_1 * d_2 * np.cos(phi_1 + phi_2))
+                )
+                phi_gap_c = np.arccos(numerator / denominator) - phi_1
+
             tmpResultMsg.do_ca = True
-            tmpResultMsg.phi_gap = -angleGapC
-            print(-angleGapC * 180 / math.pi)
-            tmpResultMsg.ca_distance = findNearObjs[0].distFromEgo
+            tmpResultMsg.phi_gap = phi_gap_c
+            # print(
+            #     "idx:",
+            #     maxIdx,
+            #     "\tgap:",
+            #     int(rad2deg(gapList[maxIdx])),
+            #     "\tleft:",
+            #     int(rad2deg(l_bound)),
+            #     "\tright:",
+            #     int(rad2deg(r_bound)),
+            #     "\tbtw:",
+            #     int(rad2deg(phi_gap_c)),
+            # )
+            # print(
+            #     focusObjs[tmpIdx - 1].marginAngleRight * 180 / math.pi,
+            #     angleGapC * 180 / math.pi,
+            #     focusObjs[tmpIdx].marginAngleLeft * 180 / math.pi,
+            # )
+            # tmpResultMsg.ca_distance = next(
+            #     (
+            #         obj_.distFromEgo
+            #         for obj_ in enumerate(findNearObjs)
+            #         if obj_.distFromEgo != 0.0
+            #     ),
+            #     None,
+            # )
+            tmpResultMsg.ca_distance = next(
+                (
+                    obj.distFromEgo
+                    for obj in findNearObjs
+                    if obj.distFromEgo != 0
+                ),
+                None,
+            )
+
             tmpResultMsg.ca_const_alpha = GainAlpha
             tmpResultMsg.ca_const_beta = GainBeta
 
         return tmpResultMsg
 
     # Filtering interest zone
-    def filtering(self):
+    def filtering(self) -> List[ObjInfo]:
         tmpNpArr = np.array(self.list_obj, dtype=object)
         self.list_obj = []
         tmpFilterList = []
         maxIdx = 0
+
+        obj: ObjInfo
         for obj in tmpNpArr:
+            # get angle toward object from ego heading
+            # Object on left: Positive, Object on right: Negative
             obj.angleFromEgo = (
                 np.arctan2((obj.posY - self.egoPosY), (obj.posX - self.egoPosX))
                 - self.egoHeadAngle
             )
+            # print(obj.angleFromEgo / math.pi * 180)
+            # Get distance from ego to object
             obj.distFromEgo = np.linalg.norm(
                 [(obj.posX - self.egoPosX), (obj.posY - self.egoPosY)], ord=2
             )
+            # print(obj.distFromEgo)
             tmpFilterList.append(obj.angleFromEgo)
         tmpFilterArr = np.asarray(tmpFilterList)
+
+        # Filter by interest range
         tmpMask = np.logical_and(
             (tmpFilterArr < self.guidAngleLeft),
             (tmpFilterArr > self.guidAngleRight),
@@ -130,28 +212,40 @@ class ScoutCollisionAvoidance:
         filteredAngles = tmpFilterArr[tmpMask]
 
         sortedDatas = []
+        # If the object exists
         if len(filteredDatas) > 0:
-            # sort CCW
+            # sort CW: left(big) to right(small)
+            x: ObjInfo
             sortedDatas = sorted(
                 filteredDatas, key=lambda x: x.angleFromEgo, reverse=True
             )
 
+        # print("-" * 20)
+        # for data in sortedDatas:
+        #     print(data.angleFromEgo * 180 / math.pi)
+
         return sortedDatas
 
     def calcGap(self, objs: List[ObjInfo], length: int):
+        # Left boundary
         angleList = [[0, self.guidAngleLeft]]
         gapList = []
+        # Loop through left most object to right most object
         for i in range(length):
             distDatas = [
                 (objs[i].posX - self.egoPosX),
                 (objs[i].posY - self.egoPosY),
                 (objs[i].maxCircleRadius + MarginDist),
             ]
+            # get distance from ego to circumscribed circle
             tmpSquare = (
                 distDatas[0] ** 2 + distDatas[1] ** 2 - distDatas[2] ** 2
             )
+            # if circumscribed circle is too close, then use center distance
             if tmpSquare <= 0:
                 tmpSquare = distDatas[0] ** 2 + distDatas[1] ** 2
+
+            # get distance
             distSide = np.sqrt(tmpSquare)
             objs[i].marginDist = distSide
             deltaAngle = np.arctan2(objs[i].maxCircleRadius, distSide)
@@ -160,17 +254,30 @@ class ScoutCollisionAvoidance:
             objs[i].marginAngleLeft = tmpLeftAngle
             objs[i].marginAngleRight = tmpRightAngle
             angleList.append([tmpLeftAngle, tmpRightAngle])
+        # right boundary
         angleList.append([self.guidAngleRight, 0])
         # List of gaps starting from left boundary to right boundary
         for i in range(1, len(angleList)):
+            # Left object's right side - right object's left side
             tmpDeltaAngleLeft = angleList[i - 1][1] - angleList[i][0]
             gapList.append(tmpDeltaAngleLeft)
+
+        # for gap in gapList:
+        #     print(gap * 180 / math.pi, end="  ")
+        # print("\n", "-" * 20)
+
         npGapList = np.asarray(gapList)
+        # find the biggest gap
         maxIdx = np.argmax(npGapList)
         # print(maxIdx, npGapList[maxIdx] / math.pi * 180)
         return (maxIdx, npGapList)
 
     def callbackObjInfo(self, datas: ObjectInfo):
+        """Get information on objects within few meters from ego
+
+        Args:
+            datas (ObjectInfo)
+        """
         self.len_obj = datas.num_of_objects
         if self.len_obj > 0:
             posX = datas.pose_x
@@ -180,6 +287,7 @@ class ScoutCollisionAvoidance:
             sizeY = datas.size_y
             objType = datas.object_type
             self.list_obj = []
+            # self.list_obj: list of object
             for i in range(0, self.len_obj):
                 self.list_obj.append(
                     ObjInfo(
@@ -192,7 +300,7 @@ class ScoutCollisionAvoidance:
         else:
             self.list_obj = []
 
-    def callbackImu(self, datas):
+    def callbackImu(self, datas: Imu):
         self.egoHeadQuaternion = [
             datas.orientation.x,
             datas.orientation.y,
@@ -201,7 +309,7 @@ class ScoutCollisionAvoidance:
         ]
         _, _, self.egoHeadAngle = euler_from_quaternion(self.egoHeadQuaternion)
 
-    def callbackOdom(self, datas):
+    def callbackOdom(self, datas: Odometry):
         self.egoPosX = datas.pose.pose.position.x
         self.egoPosY = datas.pose.pose.position.y
 
