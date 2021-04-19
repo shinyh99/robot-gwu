@@ -94,23 +94,28 @@ class FollowTheCarrot:
                 # elif self.lfd > self.max_lfd :
                 #     self.lfd=self.max_lfd
 
-                min_dis = float("inf")
-                for num, i in enumerate(self.path.poses):
-                    path_point = i.pose.position
+                if len(self.path.poses) > 1:
+                    # Find a specific point which is "self.lfd" away from ego on the route
+                    min_dis = float("inf")
+                    for i in self.path.poses:
+                        path_point = i.pose.position
 
-                    dis = sqrt(
-                        pow(
-                            path_point.x - self.path.poses[0].pose.position.x, 2
+                        dis = sqrt(
+                            pow(
+                                path_point.x
+                                - self.path.poses[0].pose.position.x,
+                                2,
+                            )
+                            + pow(
+                                path_point.y
+                                - self.path.poses[0].pose.position.y,
+                                2,
+                            )
                         )
-                        + pow(
-                            path_point.y - self.path.poses[0].pose.position.y, 2
-                        )
-                    )
-                    # print(dis)
-                    if abs(dis - self.lfd) < min_dis:
-                        min_dis = abs(dis - self.lfd)
-                        self.forward_point = path_point
-                        self.is_look_forward_point = True
+                        if abs(self.lfd - dis) < min_dis:
+                            min_dis = abs(self.lfd - dis)
+                            self.forward_point = path_point
+                            self.is_look_forward_point = True
 
                 if self.is_look_forward_point:
                     global_path_point = [
@@ -128,11 +133,12 @@ class FollowTheCarrot:
                         beta = self.collision_data.ca_const_beta
                         d_min = self.collision_data.ca_distance
 
-                        if d_min < 5 * self.target_vel:
-                            d_min = (
-                                5
-                                * self.target_vel
-                                * pow(1 / 2, 5 * self.target_vel - d_min)
+                        d_min_factor = 2.5 * self.target_vel
+
+                        if d_min < d_min_factor:
+                            d_min = d_min_factor * pow(
+                                1 / 2,
+                                d_min_factor - d_min,
                             )
 
                         if d_min == 0.0 or (alpha == 0.0 and beta == 0.0):

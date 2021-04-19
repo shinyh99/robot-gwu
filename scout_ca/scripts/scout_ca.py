@@ -16,12 +16,14 @@ from typing import *
 
 import numpy as np
 
+# from EllipseDistance import EllipseDistance
+
 MaxLeftDegree = 55.0
 MaxRightDegree = -55.0
-MaxDistance = 10
+MaxDistance = 7.5
 MarginDist = 1
 
-GainAlpha = 1
+GainAlpha = 1.7
 GainBeta = 1
 
 
@@ -42,6 +44,12 @@ class ObjInfo(object):
         self.sizeY = size[1]
         self.objType = objType
         self.maxCircleRadius = np.sqrt(max(size) ** 2) / 2 + MarginDist
+
+        # if np.abs(size[0] - size[1]) / 2 > 0.4:
+        #     self.isEllipse = True
+        #     self.sizeX += 2
+        # else:
+        #     self.isEllipse = False
 
         self.angleFromEgo = 0.0
         self.distFromEgo = 0.0
