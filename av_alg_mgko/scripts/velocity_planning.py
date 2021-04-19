@@ -61,7 +61,7 @@ class CruiseControl:
     def acc(self, local_vaild_object, ego_vel, target_vel):
         out_vel = target_vel
         if self.object[0] == True:
-            print("ACC ON")
+            # print("ACC ON")
             front_vehicle = [
                 local_vaild_object[self.object[1]][1],
                 local_vaild_object[self.object[1]][2],

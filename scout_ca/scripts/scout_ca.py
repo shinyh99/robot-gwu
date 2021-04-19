@@ -18,9 +18,10 @@ import numpy as np
 
 MaxLeftDegree = 55.0
 MaxRightDegree = -55.0
-MarginDist = 0.1
+MaxDistance = 10
+MarginDist = 1
 
-GainAlpha = 1.3
+GainAlpha = 1
 GainBeta = 1
 
 
@@ -65,6 +66,7 @@ class ScoutCollisionAvoidance:
 
         self.guidAngleLeft = deg2rad(MaxLeftDegree)
         self.guidAngleRight = deg2rad(MaxRightDegree)
+        self.maxDistance = MaxDistance
 
     def process(self):
         tmpResultMsg = CollisionAvoidance()
@@ -102,22 +104,21 @@ class ScoutCollisionAvoidance:
             # # get distance
 
             # if the largest gap is at leftmost
-            l_bound = 0.0
-            r_bound = 0.0
+            r_obj_idx = maxIdx
+            l_obj_idx = int(maxIdx - 1)
+            # print(maxIdx, len(gapList))
             if maxIdx == 0:
                 l_bound = self.guidAngleLeft
-                r_bound = focusObjs[maxIdx].marginAngleLeft
+                r_bound = focusObjs[r_obj_idx].marginAngleLeft
                 phi_gap_c = self.guidAngleLeft - gapList[maxIdx] / 2
             # if the largest gap is at rightmost
             elif maxIdx == len(gapList) - 1:
-                l_bound = focusObjs[maxIdx - 1].marginAngleRight
+                l_bound = focusObjs[l_obj_idx].marginAngleRight
                 r_bound = self.guidAngleRight
                 phi_gap_c = self.guidAngleRight + gapList[maxIdx] / 2
             # if the largest gap is between the objects
             else:
                 # Do trigometry
-                r_obj_idx = maxIdx
-                l_obj_idx = int(maxIdx - 1)
                 l_bound = focusObjs[l_obj_idx].marginAngleRight
                 r_bound = focusObjs[r_obj_idx].marginAngleLeft
                 phi_1, phi_2 = abs(r_bound), abs(l_bound)
@@ -135,22 +136,28 @@ class ScoutCollisionAvoidance:
                     + d_2 ** 2
                     + (2.0 * d_1 * d_2 * np.cos(phi_1 + phi_2))
                 )
+                # print(
+                #     len(focusObjs),
+                #     int(numerator),
+                #     int(denominator),
+                #     int(rad2deg(phi_1)),
+                # )
                 phi_gap_c = np.arccos(numerator / denominator) - phi_1
 
             tmpResultMsg.do_ca = True
             tmpResultMsg.phi_gap = phi_gap_c
-            # print(
-            #     "idx:",
-            #     maxIdx,
-            #     "\tgap:",
-            #     int(rad2deg(gapList[maxIdx])),
-            #     "\tleft:",
-            #     int(rad2deg(l_bound)),
-            #     "\tright:",
-            #     int(rad2deg(r_bound)),
-            #     "\tbtw:",
-            #     int(rad2deg(phi_gap_c)),
-            # )
+            print(
+                "idx:",
+                maxIdx,
+                "\tgap:",
+                int(rad2deg(gapList[maxIdx])),
+                "\tleft:",
+                int(rad2deg(l_bound)),
+                "\tright:",
+                int(rad2deg(r_bound)),
+                "\tbtw:",
+                int(rad2deg(phi_gap_c)),
+            )
             # print(
             #     focusObjs[tmpIdx - 1].marginAngleRight * 180 / math.pi,
             #     angleGapC * 180 / math.pi,
@@ -173,8 +180,8 @@ class ScoutCollisionAvoidance:
                 None,
             )
 
-            tmpResultMsg.ca_const_alpha = GainAlpha
-            tmpResultMsg.ca_const_beta = GainBeta
+        tmpResultMsg.ca_const_alpha = GainAlpha
+        tmpResultMsg.ca_const_beta = GainBeta
 
         return tmpResultMsg
 
@@ -182,7 +189,8 @@ class ScoutCollisionAvoidance:
     def filtering(self) -> List[ObjInfo]:
         tmpNpArr = np.array(self.list_obj, dtype=object)
         self.list_obj = []
-        tmpFilterList = []
+        tmp_angle_filter = []
+        tmp_distance_filter = []
         maxIdx = 0
 
         obj: ObjInfo
@@ -199,17 +207,22 @@ class ScoutCollisionAvoidance:
                 [(obj.posX - self.egoPosX), (obj.posY - self.egoPosY)], ord=2
             )
             # print(obj.distFromEgo)
-            tmpFilterList.append(obj.angleFromEgo)
-        tmpFilterArr = np.asarray(tmpFilterList)
+            tmp_angle_filter.append(obj.angleFromEgo)
+            tmp_distance_filter.append(obj.distFromEgo)
+        tmp_angle_filter_arr = np.asarray(tmp_angle_filter)
+        tmp_distance_filter_arr = np.asarray(tmp_distance_filter)
 
         # Filter by interest range
         tmpMask = np.logical_and(
-            (tmpFilterArr < self.guidAngleLeft),
-            (tmpFilterArr > self.guidAngleRight),
+            np.logical_and(
+                (tmp_angle_filter_arr < self.guidAngleLeft),
+                (tmp_angle_filter_arr > self.guidAngleRight),
+            ),
+            (tmp_distance_filter_arr <= self.maxDistance),
         )
         # print(tmpMask)
         filteredDatas = tmpNpArr[tmpMask]
-        filteredAngles = tmpFilterArr[tmpMask]
+        filteredAngles = tmp_angle_filter_arr[tmpMask]
 
         sortedDatas = []
         # If the object exists

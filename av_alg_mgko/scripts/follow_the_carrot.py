@@ -42,11 +42,6 @@ class FollowTheCarrot:
         while not rospy.is_shutdown():
             rate.sleep()
 
-            print(
-                f"local:{self.is_path}, odom:{self.is_odom}, target:{self.is_target_vel}",
-                flush=True,
-            )
-
             if self.is_path and self.is_odom and self.is_target_vel:
 
                 vehicle_position = self.current_postion
@@ -127,16 +122,23 @@ class FollowTheCarrot:
                     theta = atan2(local_path_point[1], local_path_point[0])
 
                     phi_final = 0
+                    d_min = 0
                     if self.is_ca:
                         alpha = self.collision_data.ca_const_alpha
                         beta = self.collision_data.ca_const_beta
                         d_min = self.collision_data.ca_distance
 
-                        try:
-                            frac_alpha_dmin = alpha / d_min
-                        except ZeroDivisionError:
+                        if d_min < 5 * self.target_vel:
+                            d_min = (
+                                5
+                                * self.target_vel
+                                * pow(1 / 2, 5 * self.target_vel - d_min)
+                            )
+
+                        if d_min == 0.0 or (alpha == 0.0 and beta == 0.0):
                             phi_final = theta
                         else:
+                            frac_alpha_dmin = alpha / d_min
                             phi_final = (
                                 frac_alpha_dmin * self.collision_data.phi_gap
                                 + beta * theta
@@ -146,9 +148,11 @@ class FollowTheCarrot:
                         phi_final = theta
 
                     self.ctrl_msg.angular.z = phi_final
+                    distnace_min = "%2.2f" % self.collision_data.ca_distance
+                    distnace_min_adjusted = "%2.2f" % d_min
+                    velocity = "%2.2f" % self.target_vel
                     print(
-                        int(self.collision_data.phi_gap * 180 / pi),
-                        int(phi_final * 180 / pi),
+                        f"vel:{velocity}  dmin:{distnace_min}  adjusted: {distnace_min_adjusted}  ca: {int(self.collision_data.phi_gap * 180 / pi)}\t th: {int(theta * 180 / pi)}\t dir: {int(phi_final * 180 /pi)}"
                     )
                     self.ctrl_msg.linear.x = self.target_vel
 
@@ -161,6 +165,12 @@ class FollowTheCarrot:
                     self.ctrl_msg.angular.z = 0.0
                     self.ctrl_msg.linear.x = 0.0
                 self.ctrl_pub.publish(self.ctrl_msg)
+
+            else:
+                print(
+                    f"local:{self.is_path}, odom:{self.is_odom}, target:{self.is_target_vel}",
+                    flush=True,
+                )
 
     def path_callback(self, msg: Path):
         self.is_path = True
