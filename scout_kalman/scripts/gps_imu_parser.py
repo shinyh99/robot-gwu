@@ -15,9 +15,6 @@ from nav_msgs.msg import Odometry
 
 class Converter:
     def __init__(self):
-        rospy.init_node("gps_imu_parser", anonymous=True)
-
-    def run(self):
         self.gps_sub = rospy.Subscriber(
             "/gps", GPSMessage, self.navsat_callback
         )
@@ -44,6 +41,7 @@ class Converter:
         self.convertLL2UTM()
 
         if self.heading is not None:
+
             br = tf.TransformBroadcaster()
 
             br.sendTransform(
@@ -86,7 +84,7 @@ class Converter:
 
 
 if __name__ == "__main__":
+    rospy.init_node("gps_imu_parser", anonymous=True)
     converter = Converter()
-    converter.run()
 
     rospy.spin()
