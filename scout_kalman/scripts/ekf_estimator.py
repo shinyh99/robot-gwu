@@ -14,16 +14,22 @@ class ExtendedKalmanFilter:
     def __init__(self, dt=0.05) -> None:
         self.T = dt
 
+        # Initial x: [p_x, p_y, psi]
+        # reshape(row, column) : reshape(-1, 1): reshape to have one column
         self.X = np.array([0, 0, 0], dtype=float).reshape([-1, 1])
 
+        # Initial Posterioiri estimate covariance matrix
         self.P = np.diag([2, 2, 2])
 
+        # Initial Covariance of process noise
         self.Q = self.T * np.diag([0.1, 0.1, 0.02])
 
+        # Initial Covariance of observation noise
         self.R = np.diag([0.1, 0.1]) / self.T
 
+        # Gain term driven by model
         # use x, and y
-        self.H = np.array([[1, 0, 0], [0, 1, 0]], dtype=float)
+        self.C = np.array([[1, 0, 0], [0, 1, 0]], dtype=float)
 
         self.pose_pub = rospy.Publisher("/pose_ekf", Odometry, queue_size=1)
 
@@ -32,6 +38,8 @@ class ExtendedKalmanFilter:
         self.odom_msg.header.frame_id = "/map"
 
     def prediction(self, u):
+        # u = [vel_linear, vel_angular]
+        # dX_pre: X_dot = d/dt[p_x, p_y, psi_t] = v_x, v_y, psi_dot
         dX_pre = np.zeros((3, 1), dtype=float)
         dX_pre[0, :] = u[0] * np.cos(self.X[2, :])
         dX_pre[1, :] = u[0] * np.cos(self.X[2, :])
@@ -52,20 +60,30 @@ class ExtendedKalmanFilter:
         self.P = self.F.dot(self.P).dot(self.F.T) + self.Q
 
     def correction(self, Z):
-        K = self.P.dot(self.H.T).dot(
-            np.linalg.inv(self.H.dot(self.P).dot(self.H.T) + self.R)
+        # Z: measured value
+        K = self.P.dot(self.C.T).dot(
+            np.linalg.inv(self.C.dot(self.P).dot(self.C.T) + self.R)
         )
-        Y = self.H.dot(self.X)
+        Y = self.C.dot(self.X)
 
         self.X = self.X + K.dot(Z - Y)
 
-        self.P = self.P - K.dot(self.H).dot(self.P)
+        self.P = self.P - K.dot(self.C).dot(self.P)
 
-    def calc_F(self, x, u):
+    def calc_F(self, x, u: list):
+        # x = [p_x, p_y, psi]
+        # u = [linear_velocity, angular_velocity]
         self.F = np.zeros_like(self.Q, dtype=float)
 
         self.F[0, 2] = -u[0] * np.sin(x[2, :])
         self.F[1, 2] = u[0] * np.cos(x[2, :])
+
+        """
+        self.F
+        [0  0   -v_x]
+        [0  0   v_x]
+        [0  0   0]
+        """
 
         self.F = np.identity(x.shape[0]) + self.T * self.F
 
@@ -117,14 +135,15 @@ class CMDPublisher:
 
         self.t = 0.0
 
-    def calc_u(self):
+    def calc_u(self) -> list:
+        # u = [v_linear, v_angular]
+        # linear velocity
         self.u[0] = 0.2
-
-        self.u[1] = 0.5 * np.sin(self.t * 2 * np.pi / 5)
-
-        self.cmd_msg.angular.z = self.u[1]
-
         self.cmd_msg.linear.x = self.u[0]
+
+        # angular velocity
+        self.u[1] = 0.5 * np.sin(self.t * 2 * np.pi / 5)
+        self.cmd_msg.angular.z = self.u[1]
 
         self.t += self.dt
 
@@ -149,7 +168,7 @@ if __name__ == "__main__":
     while not rospy.is_shutdown():
         if loc_sensor.x is not None and loc_sensor.y is not None:
 
-            # decide the u
+            # decide the u: linear/angular velocity
             u = cmd_gen.calc_u()
 
             # prediction step
