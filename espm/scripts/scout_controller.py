@@ -11,8 +11,6 @@ from nav_msgs.msg import Odometry, Path
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 import numpy as np
 
-from simple_pid import PID
-
 
 class FollowTheCarrot:
     def __init__(self):
@@ -188,8 +186,6 @@ class FollowTheCarrot:
     def status_callback(self, msg: ScoutStatus):
         self.speed_current = msg.linear_velocity
         self.speed_current_on = True
-
-    
 
 
 if __name__ == "__main__":
