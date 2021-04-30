@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="scout_CA" type="scout_CA.py" name="scout_CA" output="screen">
+  </node>
+</launch>
