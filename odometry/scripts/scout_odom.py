@@ -47,8 +47,8 @@ class ScoutOdom:
                 br.sendTransform(
                     (x, y, z), q, current_time, "/base_link", "/odom"
                 )
-                # q2 = transformations.quaternion_from_euler(0, 0, 0)
-                # br.sendTransform((0, 0, 0), q2, current_time, "/odom", "/map")
+                q2 = transformations.quaternion_from_euler(0, 0, 0)
+                br.sendTransform((0, 0, 0), q2, current_time, "/odom", "/map")
 
                 # print(linear_vel, angular_vel)
 
