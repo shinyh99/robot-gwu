@@ -1,0 +1,50 @@
+<launch>
+  <!-- x y z yaw pitch roll frame_id child_frame_id period_in_ms -->
+  <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher" args="0 0 0.5 0 0 0 base_link velodyne 100" output="screen"/>
+
+  <param name="/use_sim_time" value="false" />
+
+  <!-- <group unless="$(arg no_rviz)">
+    <node name="rviz" pkg="rviz" type="rviz" required="true"
+        args="-d $(find cartographer_ros)/configuration_files/demo_2d.rviz" />
+
+    <node name="cartographer_occupancy_grid_node" pkg="cartographer_ros"
+        type="cartographer_occupancy_grid_node" args="-resolution 0.05" />
+  </group> -->
+
+
+  <!-- <node name="robot_state_publisher" pkg="robot_state_publisher"
+    type="robot_state_publisher" /> -->
+
+  <node name="scout_odom" pkg="odometry" type="scout_odom.py" />
+
+
+  <node name="rviz" pkg="rviz" type="rviz" required="true"
+      args="-d $(find cartographer_ros)/configuration_files/demo_2d.rviz" />
+
+
+  <node name="cartographer_node" pkg="cartographer_ros"
+      type="cartographer_node" args="
+          -configuration_directory $(find cartographer_ros)/configuration_files
+          -configuration_basename backpack_2d.lua"
+      output="screen">
+    <remap from="echoes" to="horizontal_laser_2d" />
+  </node>
+
+  <!-- <node name="cartographer_node" pkg="cartographer_ros"
+      type="cartographer_node" args="
+          -configuration_directory $(find scout_mapper)/cartographer/configuration
+          -configuration_basename cartographer.lua"
+      output="screen">
+    <remap from="echoes" to="horizontal_laser_2d" />
+  </node> -->
+
+  <node name="cartographer_occupancy_grid_node" pkg="cartographer_ros"
+      type="cartographer_occupancy_grid_node" args="-resolution 0.05" />
+
+
+
+
+
+  
+</launch>
