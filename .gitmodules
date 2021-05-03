@@ -2,3 +2,7 @@
 	path = geometry2
 	url = https://github.com/ros/geometry2.git
 	branch = melodic-devel
+[submodule "hector_slam"]
+	path = hector_slam
+	url = https://github.com/tu-darmstadt-ros-pkg/hector_slam.git
+	branch = melodic-devel

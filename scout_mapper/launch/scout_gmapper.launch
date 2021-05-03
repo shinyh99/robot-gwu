@@ -1,3 +1,4 @@
+<!-- Use when odom does not work -->
 <launch>
   <node pkg="gmapping" type="slam_gmapping" name="scout_gmapping" output="screen">
     <remap from="/scan" to="/lidar2D" />
