@@ -1,0 +1,5 @@
+<launch>
+	<!-- bridge -->
+    <node pkg="localization" type="pf_localization.py" name="pf_localization"  />
+	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find localization)/rviz/local.rviz" />
+</launch>
