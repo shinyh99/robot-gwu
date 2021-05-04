@@ -21,8 +21,8 @@ class ScoutOdom:
         self.odom_pub = rospy.Publisher("/odom", Odometry, queue_size=1)
         rospy.Subscriber("/scout_status", ScoutStatus, self.status_callback)
         odom_msg = Odometry()
-        odom_msg.header.frame_id = "/odom"
-        odom_msg.child_frame_id = "/base_link"
+        odom_msg.header.frame_id = "odom"
+        odom_msg.child_frame_id = "base_link"
         x, y, z = 0.0, 0.0, 0.0
         heading_rad = 0.0
         freq = 30
@@ -47,8 +47,8 @@ class ScoutOdom:
                 br.sendTransform(
                     (x, y, z), q, current_time, "/base_link", "/odom"
                 )
-                q2 = transformations.quaternion_from_euler(0, 0, 0)
-                br.sendTransform((0, 0, 0), q2, current_time, "/odom", "/map")
+                # q2 = transformations.quaternion_from_euler(0, 0, 0)
+                # br.sendTransform((0, 0, 0), q2, current_time, "/odom", "/map")
 
                 # print(linear_vel, angular_vel)
 
