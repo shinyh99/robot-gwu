@@ -2,6 +2,8 @@ Header header
 int32 num_of_objects
 int16[] object_type
 
+int32[] object_id
+
 float64[] pose_x
 float64[] pose_y
 float64[] pose_z

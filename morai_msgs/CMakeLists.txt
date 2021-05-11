@@ -4,6 +4,7 @@ project(morai_msgs)
 
 find_package(catkin REQUIRED COMPONENTS
   std_msgs
+  geometry_msgs
   message_generation
 )
 
@@ -36,16 +37,36 @@ find_package(catkin REQUIRED COMPONENTS
    SaveSensorData.msg
    MoraiTimestamp.msg
    GhostMessage.msg
+   Lamps.msg
+   MoraiTLInfo.msg
+   MoraiSimProcHandle.msg
+   MoraiSimProcStatus.msg
+   MoraiSrvResponse.msg
+   MoraiTLIndex.msg
+   RadarTrack.msg
+   RadarTracks.msg
  )
+
+ add_service_files(
+   DIRECTORY srv
+   FILES
+   MoraiScenarioLoadSrv.srv
+   MoraiSimProcSrv.srv
+   MoraiTLInfoSrv.srv
+
+ )
+
 
  generate_messages(
    DEPENDENCIES
+   geometry_msgs
    std_msgs
  )
 
 catkin_package(
   CATKIN_DEPENDS 
 std_msgs 
+  geometry_msgs
 message_runtime
 )
 
