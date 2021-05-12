@@ -1,15 +1,15 @@
 global_costmap:
   global_frame: map
   robot_base_frame: base_link
-  update_frequency: 5.0
-  # NOTE If you aren't using an existing map or map server, set the static_map parameter to false. 
-  static_map: false
 
-  # cost
-  cost_scaling_factor: 3.0
-  inflation_radius: 1.5
+  update_frequency: 1.0
+  # NOTE If you aren't using an existing map or map server, set the static_map parameter to false. 
+  # static_map: false
+
+  inflater_layer:
+    cost_scaling_factor: 2.58
+    inflation_radius: 1.75
 
   plugins:
   - {name: static_layer, type: "costmap_2d::StaticLayer"}
   - {name: inflater_layer, type: "costmap_2d::InflationLayer"}
-  

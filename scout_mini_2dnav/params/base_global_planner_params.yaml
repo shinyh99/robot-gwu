@@ -7,7 +7,7 @@ GlobalPlanner:
   old_navfn_behavior: false
 
   # cost
-  lethal_cost: 255
-  neutral_cost: 50
-  cost_factor: 0.8
+  lethal_cost: 253
+  neutral_cost: 66
+  cost_factor: 0.55
   publish_potential: true

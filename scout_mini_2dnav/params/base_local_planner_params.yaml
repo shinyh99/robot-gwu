@@ -1,3 +1,28 @@
+DWAPlannerROS:
+  ## Robot Configuration Parameters
+  acc_lim_x: 2.5
+  
+  acc_lim_th: 3.2
+
+  max_vel_x: 3.0
+  min_vel_x: 0.0
+
+  max_vel_y: 0
+  min_vel_y: 0
+  acc_lim_y: 0.0
+  vy_samples: 1
+
+  ## Goal Tolerance Parameters
+
+  ## Forward Simulation Parameters
+  sim_time: 4.0
+
+  ## Debugging
+  # removes past path
+  prune_plan: false
+  # publish_cost_grid: true
+  # holonomic_robot: false
+
 # TrajectoryPlannerROS:
 #   max_vel_x: 0.45
 #   min_vel_x: 0.1
@@ -57,10 +82,3 @@
 #   oscillation_reset_dist: 0.05 #How far the robot must travel in meters before oscillation flags are reset (double, default: 0.05)
 #   escape_reset_dist: 0.1
 #   escape_reset_theta: 0.1
-
-# DWAPlannerROS:
-#   max_vel_x: 1.0
-#   min_vel_x: 0.1
-
-#   max_trans_vel: 1.0
-#   min_trans_vel: 0.1
