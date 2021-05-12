@@ -1,6 +1,6 @@
 <launch>
   <!-- map -->
-  <arg name="map_file" default="$(find scout_mapper)/map/cartographer_edit.yaml"/>
+  <arg name="map_file" default="$(find scout_mapper)/map/cartographer_closed.yaml"/>
   <node name="map" pkg="map_server" type="map_server" args="$(arg map_file)"/>
 
   <!-- rviz -->
