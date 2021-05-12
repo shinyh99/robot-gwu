@@ -1,6 +1,6 @@
 <launch>
   <!-- map -->
-  <arg name="map_file" default="$(find scout_mapper)/map/cartographer.yaml"/>
+  <arg name="map_file" default="$(find scout_mapper)/map/cartographer_edit.yaml"/>
   <node name="map" pkg="map_server" type="map_server" args="$(arg map_file)"/>
 
   <!-- rviz -->
@@ -16,7 +16,7 @@
   <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher" args="0 0 0.5 0 0 0 base_link velodyne 100" output="screen" />
   
   <!-- move base -->
-  <include file="$(find scout_mini_2dnav)/launch/move_base_only.launch"/>
+  <!-- <include file="$(find scout_mini_2dnav)/launch/move_base_only.launch"/> -->
 
   <!-- amcl -->
   <include file="$(find scout_mini_2dnav)/launch/amcl.launch"/>
