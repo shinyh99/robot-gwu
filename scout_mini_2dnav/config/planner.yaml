@@ -16,28 +16,28 @@ GlobalPlanner:
 
 # Local planner
 DWAPlannerROS:
-  sim_time: 3.0
+  sim_time: 1.7
 
   acc_lim_x: 0.5
   acc_lim_y: 0.0
-  acc_lim_th: 3.2
+  acc_lim_th: 0.4
 
-  max_vel_x: 1.0
-  min_vel_x: 0.0
+  max_vel_x: 2.0
+  # min_vel_x: -1.0
   max_vel_y: 0.0
   min_vel_y: 0.0
 
-  max_vel_trans: 1.0
-  min_vel_trans: 0.1
+  max_vel_trans: 2.0
+  # min_vel_trans: 0.1
   max_vel_rot: 1.0
-  min_vel_rot: 0.2
+  # min_vel_rot: 0.2
 
   ## Trajectory Scoring Parameters
   # The weighting for how much the controller should stay close to the path it was given 
-  path_distance_bias: 16.0 # default: 32.0
+  path_distance_bias: 32.0 # default: 32.0
 
   # The weighting for how much the controller should attempt to reach its local goal, also controls speed 
-  goal_distance_bias: 12.0 # default: 24.0
+  goal_distance_bias: 24.0 # default: 24.0
 
   # The weighting for how much the controller should attempt to avoid obstacles 
   occdist_scale: 0.1 # default: 0.01
@@ -54,30 +54,34 @@ DWAPlannerROS:
   ## Goal Tolerance Parameters
   yaw_goal_tolerance: 0.2 # default: 0.05
   xy_goal_tolerance: 0.2 # default:   0.10
-  latch_xy_goal_tolerance: true
+  latch_xy_goal_tolerance: false
 
-  # publish_cost_grid: true
+  publish_cost_grid: true
 
 # Local planner
 TrajectoryPlannerROS:
   sim_time: 1.7 # default: 1.0
 
+  meter_scoring: true
+
+  dwa: true
+
   acc_lim_x: 0.5
-  acc_lim_y: 0.0
-  acc_lim_theta: 3.2
+  # acc_lim_y: 0.0
+  acc_lim_theta: 0.4
 
-  max_vel_x: 1.0
-  min_vel_x: 0.0
+  max_vel_x: 2.0
+  # min_vel_x: -1.0
   max_vel_y: 0.0
-  min_vel_y: 0.0
+  # min_vel_y: 0.0
 
-  escape_vel: -0.1
+  escape_vel: -0.5
 
   holonomic_robot: false
 
   ## Goal Tolerance Parameters
   # yaw_goal_tolerance: 0.2 # default: 0.05
   # xy_goal_tolerance: 0.2 # default:   0.10
-  latch_xy_goal_tolerance: true
+  latch_xy_goal_tolerance: false
 
   publish_cost_grid_pc: true

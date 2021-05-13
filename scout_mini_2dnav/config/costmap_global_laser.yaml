@@ -2,9 +2,13 @@ global_frame: odom
 rolling_window: true
 # track_unknown_space: true
 
-inflation:
-  cost_scaling_factor: 2.58
-  inflation_radius: 1.75
+update_frequency: 10.0
+publish_frequency: 10.0
+transform_tolerance: 0.5
+
+# inflation:
+#   cost_scaling_factor: 2.58
+#   inflation_radius: 1.75
 
 plugins:
   - {name: static,    type: "costmap_2d::StaticLayer"}
