@@ -1,0 +1,83 @@
+recovery_behavior_enabled: true
+
+# Global planner
+GlobalPlanner:
+  allow_unknown: false
+  use_dijkstra: true #Use A* instead
+  use_quadratic: false
+  use_grid_path: false
+  old_navfn_behavior: false
+
+  # cost
+  lethal_cost: 253
+  neutral_cost: 66
+  cost_factor: 0.55
+  publish_potential: true
+
+# Local planner
+DWAPlannerROS:
+  sim_time: 3.0
+
+  acc_lim_x: 0.5
+  acc_lim_y: 0.0
+  acc_lim_th: 3.2
+
+  max_vel_x: 1.0
+  min_vel_x: 0.0
+  max_vel_y: 0.0
+  min_vel_y: 0.0
+
+  max_vel_trans: 1.0
+  min_vel_trans: 0.1
+  max_vel_rot: 1.0
+  min_vel_rot: 0.2
+
+  ## Trajectory Scoring Parameters
+  # The weighting for how much the controller should stay close to the path it was given 
+  path_distance_bias: 16.0 # default: 32.0
+
+  # The weighting for how much the controller should attempt to reach its local goal, also controls speed 
+  goal_distance_bias: 12.0 # default: 24.0
+
+  # The weighting for how much the controller should attempt to avoid obstacles 
+  occdist_scale: 0.1 # default: 0.01
+
+  # The distance from the center point of the robot to place an additional scoring point, in meters 
+  forward_point_distance: 0.325 # default: 0.325
+
+  # The amount of time that the robot must stop before a collision in order for a trajectory to be considered valid in seconds 
+  stop_time_buffer: 0.2 # default: 0.2
+
+  # The absolute value of the velocity at which to start scaling the robot's footprint, in m/s 
+  scaling_speed: 0.25 # default: 0.25
+
+  ## Goal Tolerance Parameters
+  yaw_goal_tolerance: 0.2 # default: 0.05
+  xy_goal_tolerance: 0.2 # default:   0.10
+  latch_xy_goal_tolerance: true
+
+  # publish_cost_grid: true
+
+# Local planner
+TrajectoryPlannerROS:
+  sim_time: 1.7 # default: 1.0
+
+  acc_lim_x: 0.5
+  acc_lim_y: 0.0
+  acc_lim_theta: 3.2
+
+  max_vel_x: 1.0
+  min_vel_x: 0.0
+  max_vel_y: 0.0
+  min_vel_y: 0.0
+
+  escape_vel: -0.1
+
+  holonomic_robot: false
+
+  ## Goal Tolerance Parameters
+  # yaw_goal_tolerance: 0.2 # default: 0.05
+  # xy_goal_tolerance: 0.2 # default:   0.10
+  latch_xy_goal_tolerance: true
+
+  publish_cost_grid_pc: true
