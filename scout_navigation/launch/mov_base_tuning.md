@@ -1,6 +1,8 @@
+# recovery behavior
+- consider making custom recovery behavior
 
 # Costmap
-## ## common
+## common
 ### general
 robot_radius: radius required for robot to turn
 ### inflation layer
@@ -19,3 +21,13 @@ Purple: wall
 so basically, if the laser reading is equal to max_range, it takes no effect
 Thus, we need to set max_range reading to inf, and allow obstacle_layer to clear inf by setting inf_is_valid to true
 So, we can change the max_range reading to inf using laserfilters
+
+# planner
+## DWA
+### collision avoidance
+- occdist_scale: increase this value to avoid obstacle
+- path_distance_bias: increase this value to follow the global_plan
+
+
+### goal reached
+- yaw_goal_tolerance: increase this value to lessen the rotation upon arrival

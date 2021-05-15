@@ -206,12 +206,12 @@ Visualization Manager:
       Class: rviz/Map
       Color Scheme: costmap
       Draw Behind: false
-      Enabled: false
+      Enabled: true
       Name: global_costmap
       Topic: /move_base/global_costmap/costmap
       Unreliable: false
       Use Timestamp: false
-      Value: false
+      Value: true
     - Alpha: 1
       Class: rviz/Map
       Color Scheme: costmap
@@ -325,21 +325,26 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: 0.004999999888241291
-      Class: rviz/TopDownOrtho
+      Class: rviz/FrameAligned
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Invert Z Axis: false
+      Lock Camera: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 34.255001068115234
+      Pitch: 1.570796251296997
+      Point towards: -z axis
+      Position:
+        X: 7.008514881134033
+        Y: 0.7789060473442078
+        Z: 29.61526870727539
+      Roll: -8.429368136830817e-8
       Target Frame: base_link
-      Value: TopDownOrtho (rviz)
-      X: 1.3733805418014526
-      Y: 6.262972831726074
+      Value: FrameAligned (rviz)
+      Yaw: 0
     Saved: ~
 Window Geometry:
   Displays:

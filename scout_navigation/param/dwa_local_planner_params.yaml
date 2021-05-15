@@ -19,7 +19,7 @@ DWAPlannerROS:
   acc_lim_theta: 3.2 
 
 # Goal Tolerance Parametes
-  xy_goal_tolerance: 0.05
+  xy_goal_tolerance: 0.10
   yaw_goal_tolerance: 0.17
   latch_xy_goal_tolerance: false
 
@@ -31,7 +31,7 @@ DWAPlannerROS:
   controller_frequency: 10.0
 
 # Trajectory Scoring Parameters
-  path_distance_bias: 32.0
+  path_distance_bias: 320.0
   goal_distance_bias: 20.0
   occdist_scale: 0.02
   forward_point_distance: 0.325
@@ -41,6 +41,9 @@ DWAPlannerROS:
 
 # Oscillation Prevention Parameters
   oscillation_reset_dist: 0.05
+
+# Obstacle avoidance
+  occdist_scale: 0.5 # default: 0.01
 
 # Debugging
   publish_traj_pc : true
