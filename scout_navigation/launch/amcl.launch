@@ -24,20 +24,20 @@
     <param name="update_min_a" value="0.314"/>
     <param name="odom_model_type" value="diff"/>
     <!-- Maximum rate (Hz) at which scans and paths are published for visualization, -1.0 to disable. -->
-    <param name="gui_publish_rate" value="20.0"/>
+    <param name="gui_publish_rate" value="10.0"/>
     <param name="min_particles" value="500"/>
-    <param name="max_particles" value="3000"/>
+    <param name="max_particles" value="2000"/>
     <!-- Maximum error between the true distribution and the estimated distribution. -->
     <param name="kld_err" value="0.05"/>
     <param name="kld_z" value="0.99"/>
     <!-- Number of filter updates required before resampling. -->
     <param name="resample_interval" value="1"/>
     <!-- Increase tolerance because the computer can get quite busy -->
-    <param name="transform_tolerance" value="0.5"/>
+    <param name="transform_tolerance" value="1.0"/>
     <!-- Exponential decay rate for the slow average weight filter, used in deciding when to recover by adding random poses. A good value might be 0.001. -->
     <param name="recovery_alpha_slow" value="0.0"/>
     <!--Exponential decay rate for the fast average weight filter, used in deciding when to recover by adding random poses. A good value might be 0.1. -->
-    <param name="recovery_alpha_fast" value="0.0"/>
+    <param name="recovery_alpha_fast" value="0.1"/>
 
     <remap from="scan" to="$(arg scan_topic)"/>
     <!-- Minimum scan range to be considered; -1.0 will cause the laser's reported minimum range to be used.  -->
@@ -53,7 +53,7 @@
     <param name="laser_sigma_hit" value="0.2"/>
     <param name="laser_lambda_short" value="0.1"/>
     <!-- Maximum distance to do obstacle inflation on map, for use in likelihood_field model. -->
-    <param name="laser_likelihood_max_dist" value="2.0"/>
+    <param name="laser_likelihood_max_dist" value="3.0"/>
     <param name="laser_model_type" value="likelihood_field"/>
 
     <!-- Specifies the expected noise in odometry's rotation estimate from the rotational component of the robot's motion. -->
@@ -65,7 +65,7 @@
     <!-- Specifies the expected noise in odometry's translation estimate from the rotational component of the robot's motion. -->
     <param name="odom_alpha4" value="0.2"/>
     <!-- Translation-related noise parameter (only used if model is "omni"). -->
-    <param name="odom_alpha5" value="0.2"/>
+    <param name="odom_alpha5" value="0.1"/>
     <param name="odom_frame_id" value="odom"/>
     <param name="base_frame_id" value="base_link"/>
 
