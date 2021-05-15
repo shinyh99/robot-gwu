@@ -12,7 +12,10 @@
   <node pkg="odometry" type="scout_odom.py" name="scout_odom" output="screen" />
 
   <!-- tf -->
-  <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher" args="0 0 0.5 0 0 0 base_link velodyne 100" output="screen" />
+  <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher" args="0 0 0.5 0 0 0 base_link velodyne 50" output="screen" />
+
+  <!-- filter laser max_range -->
+  <include file="$(find scout_navigation)/launch/laser_max_range_filter.launch"/>
 
   <!-- amcl -->
   <include file="$(find scout_navigation)/launch/amcl.launch">
@@ -22,6 +25,6 @@
   </include>
 
   <!-- move base -->
-  <include file="$(find scout_navigation)/launch/move_base.launch"/>
+  <!-- <include file="$(find scout_navigation)/launch/move_base.launch"/> -->
 
 </launch>

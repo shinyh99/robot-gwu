@@ -13,3 +13,9 @@ Blue: the risk area where robots may clooide
 Cyon: dangerous area, where if the center of robot meets cyon, it collides
 
 Purple: wall
+
+
+### Tips
+so basically, if the laser reading is equal to max_range, it takes no effect
+Thus, we need to set max_range reading to inf, and allow obstacle_layer to clear inf by setting inf_is_valid to true
+So, we can change the max_range reading to inf using laserfilters

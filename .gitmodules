@@ -13,3 +13,7 @@
 [submodule "navigation_msgs"]
 	path = navigation_msgs
 	url = https://github.com/ros-planning/navigation_msgs.git
+[submodule "laser_filters"]
+	path = laser_filters
+	url = https://github.com/ros-perception/laser_filters.git
+	branch = indigo-devel

@@ -1,3 +1,4 @@
+map_type: costmap
 obstacle_range: 3.0
 raytrace_range: 10.1
 
@@ -8,6 +9,5 @@ footprint_padding: 0.01
 inflation_radius: 1.0
 cost_scaling_factor: 3.0
 
-map_type: costmap
 observation_sources: scan
-scan: {sensor_frame: base_link, data_type: LaserScan, topic: scan, marking: true, clearing: true}
+scan: {sensor_frame: base_link, data_type: LaserScan, topic: scan_costmap, marking: true, clearing: true, inf_is_valid: true}

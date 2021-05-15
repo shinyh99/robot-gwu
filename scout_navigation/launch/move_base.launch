@@ -1,4 +1,7 @@
 <launch>
+  <!-- delete old parameters -->
+  <rosparam command="delete" param="/move_base"/>
+  
   <!-- Arguments -->
   <arg name="cmd_vel_topic" default="/cmd_vel" />
   <arg name="odom_topic" default="odom" />
