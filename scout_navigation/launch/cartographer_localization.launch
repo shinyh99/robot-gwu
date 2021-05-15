@@ -1,0 +1,17 @@
+<launch>
+  <param name="/use_sim_time" value="false" />
+  <node pkg="odometry" type="scout_odom_br_off.py" name="scout_odom" output="screen" />
+  <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher" args="0 0 0.5 0 0 0 base_link velodyne 100" output="screen" />
+  <node name="cartographer_node" pkg="cartographer_ros"
+      type="cartographer_node" args="
+          -configuration_directory $(find scout_navigation)/configuration
+          -configuration_basename cartographer_localization.lua"
+      output="screen">
+  </node>
+
+  <node name="cartographer_occupancy_grid_node" pkg="cartographer_ros"
+      type="cartographer_occupancy_grid_node" args="-resolution 0.02" />
+
+  <!-- <node name="rviz" pkg="rviz" type="rviz" required="true"
+      args="-d $(find scout_navigation)/rviz/cartographer_localization.rviz" /> -->
+</launch>

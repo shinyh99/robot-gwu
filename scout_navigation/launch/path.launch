@@ -22,6 +22,6 @@
   </include>
 
   <!-- move base -->
-  <!-- <include file="$(find scout_navigation)/launch/move_base.launch"/> -->
+  <include file="$(find scout_navigation)/launch/move_base.launch"/>
 
 </launch>
