@@ -1,6 +1,7 @@
 odom_model_type: diff -> diff-corrected improved a lot  
 
 transform_tolerance: decreasing this values, makes a lot better. but increases the computation
+- if extrapolation occurs increases this value
 
 resample_interval: increasing this values, allows divergence happens faster
 
