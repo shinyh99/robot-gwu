@@ -4,10 +4,6 @@ import math
 
 import rospy
 
-# import roslib
-
-# roslib.load_manifest("my_pkg_name")
-
 
 from geometry_msgs.msg import PoseStamped, PoseArray, Pose
 from move_base_msgs.msg import (

@@ -1,0 +1,27 @@
+<launch>
+  <!-- map -->
+  <arg name="map_file" default="$(find scout_navigation)/map/cartographer_closed.yaml"/>
+  <node name="map" pkg="map_server" type="map_server" args="$(arg map_file)"/>
+
+  <!-- rviz -->
+  <arg name="rviz_file" default="$(find scout_navigation)/rviz/path.rviz"/>
+  <node name="rviz" pkg="rviz" type="rviz" required="true" args="-d $(arg rviz_file)" />
+
+  <!-- odometry -->
+  <param name="/use_sim_time" value="false" />
+  <node pkg="odometry" type="scout_odom.py" name="scout_odom" output="screen" />
+
+  <!-- tf -->
+  <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher" args="0 0 0.5 0 0 0 base_link velodyne 100" output="screen" />
+
+  <!-- amcl -->
+  <include file="$(find scout_navigation)/launch/amcl.launch">
+    <arg name="initial_pose_x" value="1.92"/>
+    <arg name="initial_pose_y" value="0.0"/>
+    <arg name="initial_pose_a" value="0.0"/>
+  </include>
+
+  <!-- move base -->
+  <!-- <include file="$(find scout_navigation)/launch/move_base.launch"/> -->
+
+</launch>
