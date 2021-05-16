@@ -7,3 +7,37 @@ planner_frequency: 5.0
 oscillation_timeout: 10.0
 oscillation_distance: 0.2
 
+recovery_behaviors:
+  - name: 'aggressive_reset'
+    type: 'clear_costmap_recovery/ClearCostmapRecovery'
+  - name: stepback_and_steerturn_recovery
+    type: stepback_and_steerturn_recovery/StepBackAndSteerTurnRecovery
+  # - name: 'conservative_reset'
+  #   type: 'clear_costmap_recovery/ClearCostmapRecovery'
+  # - name: 'rotate_recovery'
+  #   type: 'rotate_recovery/RotateRecovery'
+
+# conservative_reset:
+#   reset_distance: 3.0
+#   layer_names: ["obstacle_layer"]
+
+aggressive_reset:
+  reset_distance: 0.0 # default: 1.84
+  layer_names: ["obstacle_layer"]
+
+stepback_and_steerturn_recovery:
+  only_single_steering : False # default: false
+  trial_times: 3 # default: 3
+  obstacle_patience: 0.3 # default 0.3m
+  obstacle_check_frequency: 5.0 # default: 5.0
+  sim_angle_resolution: 0.1 # default: 0.1
+  simulation_frequency: 5 # default: 5
+  linear_vel_back: -0.3 # default: -0.3
+  step_back_length: 1.0 # default: 1.0
+  step_back_timeout: 10.0 # default: 15.0
+  linear_vel_steer: 0.1 # default: 0.3
+  angular_speed_steer: 0.3 # default: 0.3
+  steering_timeout: 10.0 # default: 15.0
+  linear_vel_forward: 0.1 # default: 0.3
+  step_forward_timeout: 10.0 # default: 15.0
+
