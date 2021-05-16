@@ -4,7 +4,7 @@
 
   <!-- scan at max_range to less than max_range -->
   <node pkg="laser_filters" type="scan_to_scan_filter_chain" name="laser_max_range_filter">
-    <rosparam command="load" file="$(find scout_navigation)/config/laser.yaml" />
+    <rosparam command="load" file="$(find scout_navigation)/config/laser_max_range.yaml" />
     <remap from="scan_filtered" to="scan_costmap" />
   </node>
 </launch>
