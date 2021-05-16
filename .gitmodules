@@ -17,3 +17,7 @@
 	path = laser_filters
 	url = https://github.com/ros-perception/laser_filters.git
 	branch = indigo-devel
+[submodule "steer_drive_ros"]
+	path = steer_drive_ros
+	url = http://gitea.shinyh99.synology.me/shinyh99/steer_drive_ros.git
+	branch = kinetic-devel
