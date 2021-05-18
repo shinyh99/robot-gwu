@@ -1,101 +1,236 @@
-#!/usr/bin/env python
-
-import math
+#!/usr/bin/env python3
 
 import rospy
+from math import pi
 
+import actionlib
 
-from geometry_msgs.msg import PoseStamped, PoseArray, Pose
+from geometry_msgs.msg import (
+    PoseStamped,
+    PoseArray,
+    Pose,
+    Point,
+    Quaternion,
+    Twist,
+)
 from move_base_msgs.msg import (
+    MoveBaseAction,
+    MoveBaseGoal,
     MoveBaseActionGoal,
     MoveBaseActionFeedback,
     MoveBaseActionResult,
 )
 from actionlib_msgs.msg import GoalStatusArray
 
-import rospy
-import actionlib
+# from tf.transformations import euler_from_quaternion
+
+from tf import transformations
+
+# from tf_conversions import transformations
+
+from nav_msgs.msg import Odometry
 
 
-WAYPOINTS = PoseArray()
-
-WAYPOINT_1 = Pose()
-WAYPOINT_1.position.x = 30
-WAYPOINT_1.position.y = 30
-WAYPOINT_1.orientation.z = 0.69
-WAYPOINT_1.orientation.w = 0.72
-
-WAYPOINT_2 = Pose()
-WAYPOINT_2.position.x = 28.63
-WAYPOINT_2.position.y = 27.2
-WAYPOINT_2.orientation.z = -0.72
-WAYPOINT_2.orientation.w = 0.69
-
-WAYPOINT_3 = Pose()
-WAYPOINT_3.position.x = 56.6
-WAYPOINT_3.position.y = 26.6
-WAYPOINT_3.orientation.z = -0.71
-WAYPOINT_3.orientation.w = 0.70
-
-WAYPOINT_4 = Pose()
-WAYPOINT_4.position.x = 39.3
-WAYPOINT_4.position.y = 0.07
-WAYPOINT_4.orientation.z = 0.99
-WAYPOINT_4.orientation.w = 0.04
-
-WAYPOINT_5 = Pose()
-WAYPOINT_5.position.x = 4.03
-WAYPOINT_5.position.y = 1.00
-WAYPOINT_5.orientation.z = -0.00
-WAYPOINT_5.orientation.w = 0.99
-
-WAYPOINTS.poses.append(
-    WAYPOINT_1,
-    WAYPOINT_2,
-    WAYPOINT_3,
-    WAYPOINT_4,
-    WAYPOINT_5,
-)
-
-
-if __name__ == "__main__":
-    rospy.init_node("waypoint_client")
-    client = actionlib.SimpleActionClient("do_dishes", DoDishesAction)
-    client.wait_for_server()
-
-    goal = DoDishesGoal()
-    # Fill in the goal here
-    client.send_goal(goal)
-    client.wait_for_result(rospy.Duration.from_sec(5.0))
-
-# if __name__ == "__main__":
-#     rospy.init_node("do_dishes_client")
-#     client = actionlib.SimpleActionClient("do_dishes", DoDishesAction)
-#     client.wait_for_server()
-
-#     goal = DoDishesGoal()
-#     # Fill in the goal here
-#     client.send_goal(goal)
-#     client.wait_for_result(rospy.Duration.from_sec(5.0))
-
-
-class Waypoint(object):
+class MoveBaseSeq:
     def __init__(self):
-        pass
+
+        rospy.init_node("waypoint")
+        # List of goal points:
+        points_seq = rospy.get_param("waypoint/p_seq")
+        # List of goal quaternions:
+        quats_seq = rospy.get_param("waypoint/quat_seq")
+
+        # List of goal poses:
+        self.pose_seq = list()
+        self.goal_cnt = 0
+
+        # command velocity
+        self.pub_cmd_vel = rospy.Publisher("cmd_vel", Twist, queue_size=3)
+        self.cmd_vel = Twist()
+        rospy.Subscriber("odom", Odometry, self.odom_callback)
+        self.odom = Odometry()
+        self.odom_on = False
+
+        # just for display
+        self.pose_array = PoseArray()
+        self.pose_array.header.frame_id = "map"
+
+        n = 3
+        # Returns a list of lists [[point1(x,y,z,w)], [point2],...[pointn]]
+        points = [points_seq[i : i + n] for i in range(0, len(points_seq), n)]
+        m = 4
+        # Returns a list of lists [[quat1(x,y,z)], [quat2],...[quatn]]
+        quats = [quats_seq[i : i + m] for i in range(0, len(quats_seq), m)]
+
+        for point, quat in zip(points, quats):
+            # Exploit n variable to cycle in quat_seq
+            pose = Pose(Point(*point), Quaternion(*quat))
+            self.pose_seq.append(pose)
+            self.pose_array.poses.append(pose)
+
+        # Create action client
+        self.client = actionlib.SimpleActionClient("move_base", MoveBaseAction)
+        rospy.loginfo("Waiting for move_base action server...")
+        wait = self.client.wait_for_server(rospy.Duration(5.0))
+        if not wait:
+            rospy.logerr("Action server not available!")
+            rospy.signal_shutdown("Action server not available!")
+            return
+        rospy.loginfo("Connected to move base server")
+        rospy.loginfo("Starting goals achievements ...")
+        self.movebase_client()
+
+    def turn(self, degree):
+        turned = False
+        rad = degree / 180 * pi
+        if self.odom_on:
+            odom_quaternion = (
+                self.odom.pose.pose.orientation.x,
+                self.odom.pose.pose.orientation.y,
+                self.odom.pose.pose.orientation.z,
+                self.odom.pose.pose.orientation.w,
+            )
+            (_, _, yaw_start) = transformations.euler_from_quaternion(
+                odom_quaternion
+            )
+            print(yaw_start)
+            yaw_end_right = yaw_start + rad
+            yaw_end_left = yaw_start - rad
+
+            print(yaw_start, yaw_end_left, yaw_end_right)
+
+            while not turned:
+                odom_quaternion = (
+                    self.odom.pose.pose.orientation.x,
+                    self.odom.pose.pose.orientation.y,
+                    self.odom.pose.pose.orientation.z,
+                    self.odom.pose.pose.orientation.w,
+                )
+                yaw = transformations.euler_from_quaternion(odom_quaternion)
+
+                rate = rospy.Rate(20)
+
+                if (yaw < yaw_end_left) or (yaw > yaw_end_right):
+                    turned = True
+                else:
+                    self.cmd_vel.angular.z = 0.5
+                    self.pub_cmd_vel.publish(self.cmd_vel)
+                rate.sleep()
+
+    def odom_callback(self, msg):
+        self.odom = msg
+        self.odom_on = True
+
+    def sleep(self, time):
+        rospy.loginfo("sleep for " + str(time))
+        rospy.sleep(time)
+
+    def active_cb(self):
+        rospy.loginfo(
+            "Goal pose "
+            + str(self.goal_cnt + 1)
+            + " is now being processed by the Action Server..."
+        )
+
+    def feedback_cb(self, feedback):
+        # To print current pose at each feedback:
+        # rospy.loginfo("Feedback for goal "+str(self.goal_cnt)+": "+str(feedback))
+        rospy.loginfo(
+            "Feedback for goal pose " + str(self.goal_cnt + 1) + " received"
+        )
+
+    def done_cb(self, status, result):
+        self.goal_cnt += 1
+        # Reference for terminal status values: http://docs.ros.org/diamondback/api/actionlib_msgs/html/msg/GoalStatus.html
+        # Canceled(cancelled after execution)
+        if status == 2:
+            rospy.loginfo(
+                "Goal pose "
+                + str(self.goal_cnt)
+                + " received a cancel request after it started executing, completed execution!"
+            )
+
+        # Succeeded
+        if status == 3:
+            rospy.loginfo("Goal pose " + str(self.goal_cnt) + " reached")
+
+            self.sleep(10)
+            self.turn(90)
+
+            if self.goal_cnt < len(self.pose_seq):
+                next_goal = MoveBaseGoal()
+                next_goal.target_pose.header.frame_id = "map"
+                next_goal.target_pose.header.stamp = rospy.Time.now()
+                next_goal.target_pose.pose = self.pose_seq[self.goal_cnt]
+                rospy.loginfo(
+                    "Sending goal pose "
+                    + str(self.goal_cnt + 1)
+                    + " to Action Server"
+                )
+                rospy.loginfo(str(self.pose_seq[self.goal_cnt]))
+                self.client.send_goal(
+                    next_goal, self.done_cb, self.active_cb, self.feedback_cb
+                )
+            else:
+                rospy.loginfo("Final goal pose reached!")
+                rospy.signal_shutdown("Final goal pose reached!")
+                return
+
+        # Aborted
+        if status == 4:
+            rospy.loginfo(
+                "Goal pose "
+                + str(self.goal_cnt)
+                + " was aborted by the Action Server"
+            )
+            rospy.signal_shutdown(
+                "Goal pose " + str(self.goal_cnt) + " aborted, shutting down!"
+            )
+            return
+
+        # Rejected
+        if status == 5:
+            rospy.loginfo(
+                "Goal pose "
+                + str(self.goal_cnt)
+                + " has been rejected by the Action Server"
+            )
+            rospy.signal_shutdown(
+                "Goal pose " + str(self.goal_cnt) + " rejected, shutting down!"
+            )
+            return
+
+        # Recalled(cancelled before execution)
+        if status == 8:
+            rospy.loginfo(
+                "Goal pose "
+                + str(self.goal_cnt)
+                + " received a cancel request before it started executing, successfully cancelled!"
+            )
+
+    def movebase_client(self):
+        goal = MoveBaseGoal()
+        goal.target_pose.header.frame_id = "map"
+        goal.target_pose.header.stamp = rospy.Time.now()
+        goal.target_pose.pose = self.pose_seq[self.goal_cnt]
+        rospy.loginfo(
+            "Sending goal pose " + str(self.goal_cnt + 1) + " to Action Server"
+        )
+        rospy.loginfo(str(self.pose_seq[self.goal_cnt]))
+        self.client.send_goal(
+            goal, self.done_cb, self.active_cb, self.feedback_cb
+        )
+        rate = rospy.Rate(1)
+
+        pub_pose_array = rospy.Publisher("waypoint", PoseArray, queue_size=1)
+        while not rospy.is_shutdown():
+            pub_pose_array.publish(self.pose_array)
+            rate.sleep()
+        rospy.spin()
 
 
 if __name__ == "__main__":
-    rospy.init_node("waypoint", anonymous=False)
-    waypoint = Waypoint()
-    rospy.Subscriber(
-        "Object_topic", ObjectInfo, scoutCA.callbackObjInfo, queue_size=None
-    )
-    rospy.Subscriber("odom", Odometry, scoutCA.callbackOdom, queue_size=1)
-    rospy.Subscriber("imu", Imu, scoutCA.callbackImu, queue_size=1)
-    pub_ca = rospy.Publisher("ctrl_collision", CollisionAvoidance, queue_size=1)
-    rosrate = rospy.Rate(20)
-    while not rospy.is_shutdown():
-        tmpCaMsg = scoutCA.process()
-        pub_ca.publish(tmpCaMsg)
-        rosrate.sleep()
-    sys.exit(0)
+    try:
+        MoveBaseSeq()
+    except rospy.ROSInterruptException:
+        rospy.loginfo("Navigation finished.")
