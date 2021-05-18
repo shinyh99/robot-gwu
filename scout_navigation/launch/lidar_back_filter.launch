@@ -1,0 +1,9 @@
+<launch>
+  <!-- laser back filter -->
+  <node pkg="laser_filters" type="scan_to_scan_filter_chain"
+      name="laser_back_filter">
+    <rosparam command="load" file="$(find team_one)/config/lidar_back_filter.yaml" />
+    <remap from="scan" to="scan_range" />
+    <remap from="scan_filtered" to="scan" />
+  </node>
+</launch>

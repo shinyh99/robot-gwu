@@ -21,3 +21,6 @@
 	path = steer_drive_ros
 	url = http://gitea.shinyh99.synology.me/shinyh99/steer_drive_ros.git
 	branch = kinetic-devel
+[submodule "ira_laser_tools"]
+	path = ira_laser_tools
+	url = https://github.com/iralabdisco/ira_laser_tools.git

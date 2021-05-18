@@ -1,0 +1,7 @@
+scan_filter_chain:
+- name: outside
+  type: laser_filters/LaserScanAngularBoundsFilter # removes what is outside
+  params:
+    # use -135 ~ 135
+    lower_angle: -2.35619
+    upper_angle: 2.35619
