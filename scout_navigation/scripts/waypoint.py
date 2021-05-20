@@ -30,6 +30,17 @@ from tf import transformations
 
 from nav_msgs.msg import Odometry
 
+from std_srvs.srv import Empty
+
+GoalPlan = [
+    # [turn_in_degree, time_in_sleep]
+    [-180, 5.0],
+    [90, 3.0],
+    [90, 3.0],
+    [90, 3.0],
+    [-90, 3.0],
+]
+
 
 class MoveBaseSeq:
     def __init__(self):
@@ -50,6 +61,7 @@ class MoveBaseSeq:
         rospy.Subscriber("odom", Odometry, self.odom_callback)
         self.odom = Odometry()
         self.odom_on = False
+        self.acting = False
 
         # just for display
         self.pose_array = PoseArray()
@@ -77,53 +89,144 @@ class MoveBaseSeq:
             rospy.signal_shutdown("Action server not available!")
             return
         rospy.loginfo("Connected to move base server")
-        rospy.loginfo("Starting goals achievements ...")
+
+        # self.goal_reached_action(0)
+        # self.goal_reached_action(1)
+        # self.goal_reached_action(2)
+        # self.goal_reached_action(3)
+        # self.goal_reached_action(4)
+
         self.movebase_client()
 
-    def turn(self, degree):
-        turned = False
-        rad = degree / 180 * pi
-        if self.odom_on:
-            odom_quaternion = (
-                self.odom.pose.pose.orientation.x,
-                self.odom.pose.pose.orientation.y,
-                self.odom.pose.pose.orientation.z,
-                self.odom.pose.pose.orientation.w,
-            )
-            (_, _, yaw_start) = transformations.euler_from_quaternion(
-                odom_quaternion
-            )
-            print(yaw_start)
-            yaw_end_right = yaw_start + rad
-            yaw_end_left = yaw_start - rad
+    def clear_costmaps(self):
+        rospy.wait_for_service("/move_base/clear_costmaps")
+        rospy.loginfo("Clear costmaps")
 
-            print(yaw_start, yaw_end_left, yaw_end_right)
+        try:
+            clear_costmap = rospy.ServiceProxy(
+                "/move_base/clear_costmaps", Empty
+            )
+            clear_costmap()
+        except rospy.ServiceException as e:
+            rospy.logwarn("clear_costmap call failed: %s" % e)
+
+    def request_nomotion_update(self):
+        rospy.wait_for_service("/request_nomotion_update")
+        rospy.loginfo("amcl update")
+
+        try:
+            rospy.ServiceProxy("/request_nomotion_update", Empty)
+        except rospy.ServiceException as e:
+            rospy.logwarn("request_nomotion_update call failed: %s" % e)
+
+    def odom2euler(self, odom):
+        (_, _, yaw) = transformations.euler_from_quaternion(
+            self.odom2quat(odom)
+        )
+        return yaw
+
+    def odom2quat(self, odom, negate=False):
+        if negate:
+            return (
+                odom.pose.pose.orientation.x,
+                odom.pose.pose.orientation.y,
+                odom.pose.pose.orientation.z,
+                -odom.pose.pose.orientation.w,
+            )
+        else:
+            return (
+                odom.pose.pose.orientation.x,
+                odom.pose.pose.orientation.y,
+                odom.pose.pose.orientation.z,
+                odom.pose.pose.orientation.w,
+            )
+
+    def turn(self, rotation):
+        """rotate desired amount
+
+        Args:
+            rotation (float): positive: left, negative: right in degree
+        """
+        self.acting = True
+        rospy.loginfo("Turn %0.2f degree started", rotation)
+
+        turned = False
+        rate = rospy.Rate(20)
+
+        rad = rotation / 180 * pi
+        if self.odom_on:
+
+            quat_original = self.odom2quat(self.odom)
+            quat_rotation = transformations.quaternion_from_euler(0, 0, rad)
+            quat_new = transformations.quaternion_multiply(
+                quat_rotation, quat_original
+            )
 
             while not turned:
-                odom_quaternion = (
-                    self.odom.pose.pose.orientation.x,
-                    self.odom.pose.pose.orientation.y,
-                    self.odom.pose.pose.orientation.z,
-                    self.odom.pose.pose.orientation.w,
+
+                quat_now_inv = self.odom2quat(self.odom, True)
+                quat_diff = transformations.quaternion_multiply(
+                    quat_new, quat_now_inv
                 )
-                yaw = transformations.euler_from_quaternion(odom_quaternion)
+                (
+                    _,
+                    _,
+                    heading_diff,
+                ) = transformations.euler_from_quaternion(quat_diff)
 
-                rate = rospy.Rate(20)
+                # rospy.loginfo(
+                #     "heading_diff: %f",
+                #     heading_diff * 180 / pi,
+                # )
+                if abs(heading_diff) >= 7.5 * pi / 180:
+                    self.cmd_vel = Twist()
+                    if rad >= 0:
+                        self.cmd_vel.angular.z = 0.5
 
-                if (yaw < yaw_end_left) or (yaw > yaw_end_right):
-                    turned = True
+                    else:
+                        self.cmd_vel.angular.z = -0.5
+
                 else:
-                    self.cmd_vel.angular.z = 0.5
-                    self.pub_cmd_vel.publish(self.cmd_vel)
+                    self.cmd_vel.angular.z = 0.0
+                    turned = True
+                    rospy.loginfo("Turn %0.2f degree finished", rotation)
+
+                self.pub_cmd_vel.publish(self.cmd_vel)
+
                 rate.sleep()
+
+        self.acting = False
+
+    def desired_heading(self, rad, change):
+        heading_desired = rad + change
+        if heading_desired < -pi:
+            heading_desired += 2 * pi
+        elif heading_desired > pi:
+            heading_desired -= 2 * pi
+        else:
+            pass
+        return heading_desired
 
     def odom_callback(self, msg):
         self.odom = msg
         self.odom_on = True
 
     def sleep(self, time):
-        rospy.loginfo("sleep for " + str(time))
+        self.acting = True
+        rospy.loginfo("sleep for " + str(time) + " seconds")
         rospy.sleep(time)
+        self.acting = False
+
+    def goal_reached_action(self, goal_no):
+        (degree_to_turn, time_to_sleep) = GoalPlan[goal_no]
+        print(degree_to_turn, time_to_sleep)
+
+        self.turn(degree_to_turn)
+        self.sleep(time_to_sleep)
+
+        self.request_nomotion_update()
+        self.request_nomotion_update()
+        self.clear_costmaps()
 
     def active_cb(self):
         rospy.loginfo(
@@ -154,8 +257,7 @@ class MoveBaseSeq:
         if status == 3:
             rospy.loginfo("Goal pose " + str(self.goal_cnt) + " reached")
 
-            self.sleep(10)
-            self.turn(90)
+            self.goal_reached_action(self.goal_cnt - 1)
 
             if self.goal_cnt < len(self.pose_seq):
                 next_goal = MoveBaseGoal()
@@ -168,6 +270,7 @@ class MoveBaseSeq:
                     + " to Action Server"
                 )
                 rospy.loginfo(str(self.pose_seq[self.goal_cnt]))
+
                 self.client.send_goal(
                     next_goal, self.done_cb, self.active_cb, self.feedback_cb
                 )
@@ -209,6 +312,7 @@ class MoveBaseSeq:
             )
 
     def movebase_client(self):
+        rospy.loginfo("Starting goals achievements ...")
         goal = MoveBaseGoal()
         goal.target_pose.header.frame_id = "map"
         goal.target_pose.header.stamp = rospy.Time.now()
@@ -220,10 +324,11 @@ class MoveBaseSeq:
         self.client.send_goal(
             goal, self.done_cb, self.active_cb, self.feedback_cb
         )
-        rate = rospy.Rate(1)
+        rate = rospy.Rate(0.2)
 
         pub_pose_array = rospy.Publisher("waypoint", PoseArray, queue_size=1)
         while not rospy.is_shutdown():
+            self.clear_costmaps()
             pub_pose_array.publish(self.pose_array)
             rate.sleep()
         rospy.spin()
